@@ -3,8 +3,8 @@ import { useAuth } from '../../auth/AuthContext';
 import { adminApi } from '../../api/admin';
 import Sidebar from '../../components/admin/Sidebar';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
 const NewAdminDashboardPage: React.FC = () => {
