@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../api/client';
-import { Product } from '../../types';
+import type { Product } from '../../types';
 import { colors } from '../../styles/colors';
 
 interface CreateOrderModalProps {

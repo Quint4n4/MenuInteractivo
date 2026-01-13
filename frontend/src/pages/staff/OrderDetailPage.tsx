@@ -224,7 +224,7 @@ const OrderDetailPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {order.items.map((item) => (
+              {order.items.map((item: any) => (
                 <tr key={item.id}>
                   <td style={styles.td}>{item.product_name}</td>
                   <td style={styles.td}>{item.product_category}</td>
@@ -240,7 +240,7 @@ const OrderDetailPage: React.FC = () => {
           <div style={styles.section}>
             <h2>Historial de Estados</h2>
             <div style={styles.timeline}>
-              {order.status_events.map((event) => (
+              {order.status_events.map((event: any) => (
                 <div key={event.id} style={styles.timelineItem}>
                   <div style={styles.timelineStatus}>
                     {event.from_status || 'NUEVO'} → {event.to_status}

@@ -99,7 +99,7 @@ const InventoryPage: React.FC = () => {
 
       setShowAdjustModal(false);
       setSelectedBalance(null);
-      const deltaValue = adjustDelta;
+      const deltaValue = parseInt(adjustDelta);
       setAdjustDelta('');
       setAdjustNote('');
       loadBalances();
