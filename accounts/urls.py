@@ -16,6 +16,9 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('me/', views.me_view, name='me'),
 
+    # TEMPORARY: Database initialization endpoint (remove after setup)
+    path('init-db/', views.init_database_view, name='init-db'),
+
     # JWT token refresh
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 

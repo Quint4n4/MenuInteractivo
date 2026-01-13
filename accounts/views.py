@@ -91,6 +91,72 @@ def me_view(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def init_database_view(request):
+    """
+    TEMPORARY ENDPOINT - Initialize database with default users and roles
+    This endpoint should be removed after initial setup
+    GET/POST /api/auth/init-db
+    """
+    from .models import Role
+
+    result = {
+        'roles_created': [],
+        'users_created': [],
+        'errors': []
+    }
+
+    try:
+        # Create roles
+        admin_role, created = Role.objects.get_or_create(
+            name='ADMIN',
+            defaults={'description': 'Administrator with full access'}
+        )
+        if created:
+            result['roles_created'].append('ADMIN')
+
+        staff_role, created = Role.objects.get_or_create(
+            name='STAFF',
+            defaults={'description': 'Staff member with limited access'}
+        )
+        if created:
+            result['roles_created'].append('STAFF')
+
+        # Create admin user
+        admin_email = 'admin@clinicacamsa.com'
+        if not User.objects.filter(email=admin_email).exists():
+            admin_user = User.objects.create_superuser(
+                email=admin_email,
+                password='AdminCamsa2024',
+                full_name='Administrador CAMSA'
+            )
+            UserRole.objects.get_or_create(user=admin_user, role=admin_role)
+            result['users_created'].append(admin_email)
+
+        # Create 4 staff users
+        for i in range(1, 5):
+            staff_email = f'enfermera{i}@clinicacamsa.com'
+            if not User.objects.filter(email=staff_email).exists():
+                staff_user = User.objects.create_user(
+                    email=staff_email,
+                    password='Enfermera2024',
+                    full_name=f'Enfermera {i}',
+                    is_staff=True
+                )
+                UserRole.objects.get_or_create(user=staff_user, role=staff_role)
+                result['users_created'].append(staff_email)
+
+        result['total_users'] = User.objects.count()
+        result['message'] = 'Database initialized successfully'
+
+        return Response(result, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        result['errors'].append(str(e))
+        return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
