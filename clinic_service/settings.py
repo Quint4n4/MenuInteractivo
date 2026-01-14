@@ -44,15 +44,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Third party apps
+    # Third party apps - Cloudinary must be before local apps
+    'cloudinary_storage',
+    'cloudinary',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     'channels',
-    'cloudinary_storage',
-    'cloudinary',
 
     # Local apps
     'accounts',
@@ -193,7 +193,9 @@ cloudinary.config(
 # Use Cloudinary for media files in production
 if not DEBUG:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'  # URL prefix for media files served by cloudinary
+else:
+    # In development, use local storage
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
