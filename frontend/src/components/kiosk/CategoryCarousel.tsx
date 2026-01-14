@@ -53,6 +53,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
       <div style={styles.carouselWrapper}>
         {/* Left Arrow */}
         <button
+          className="carousel-arrow"
           style={{ ...styles.arrow, ...styles.arrowLeft }}
           onClick={scrollLeft}
           aria-label="Scroll left"
@@ -74,6 +75,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
 
         {/* Right Arrow */}
         <button
+          className="carousel-arrow"
           style={{ ...styles.arrow, ...styles.arrowRight }}
           onClick={scrollRight}
           aria-label="Scroll right"
@@ -132,11 +134,14 @@ const styles: { [key: string]: React.CSSProperties } = {
   carousel: {
     display: 'flex',
     gap: '20px',
-    overflowX: 'auto',
+    overflowX: 'scroll',
+    overflowY: 'hidden',
     scrollBehavior: 'smooth',
     padding: '10px 20px',
     scrollbarWidth: 'none', // Firefox
     msOverflowStyle: 'none', // IE/Edge
+    WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+    flexWrap: 'nowrap', // Prevent wrapping
   },
   arrow: {
     position: 'absolute',
@@ -166,11 +171,24 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
 };
 
-// Hide scrollbar for webkit browsers
+// Hide scrollbar for webkit browsers and add hover effects
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   .carousel::-webkit-scrollbar {
     display: none;
   }
+
+  .carousel-arrow:hover {
+    background-color: ${colors.primary} !important;
+    color: ${colors.white} !important;
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .carousel-arrow:active {
+    transform: translateY(-50%) scale(0.95);
+  }
 `;
-document.head.appendChild(styleSheet);
+if (!document.head.querySelector('[data-carousel-styles]')) {
+  styleSheet.setAttribute('data-carousel-styles', 'true');
+  document.head.appendChild(styleSheet);
+}
