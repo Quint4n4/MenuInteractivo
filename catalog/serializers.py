@@ -20,7 +20,19 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductCategory
-        fields = ['id', 'name', 'sort_order', 'is_active', 'product_count', 'created_at', 'updated_at']
+        fields = [
+            'id',
+            'name',
+            'icon',
+            'category_type',
+            'sort_order',
+            'show_in_carousel',
+            'carousel_order',
+            'is_active',
+            'product_count',
+            'created_at',
+            'updated_at'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def get_product_count(self, obj):
