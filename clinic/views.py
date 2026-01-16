@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from accounts.permissions import IsStaffOrAdmin
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 from .models import Room, Patient, Device, PatientAssignment
 from .serializers import (
@@ -120,6 +122,31 @@ class PatientAssignmentViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return PatientAssignmentCreateSerializer
         return PatientAssignmentSerializer
+
+    def perform_create(self, serializer):
+        """
+        Create patient assignment and broadcast via WebSocket
+        """
+        assignment = serializer.save()
+
+        # Broadcast new patient assignment to kiosk
+        try:
+            if assignment.device:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f'device_{assignment.device.id}',
+                    {
+                        'type': 'patient_assigned',
+                        'assignment_id': assignment.id,
+                        'patient_id': assignment.patient.id,
+                        'patient_name': assignment.patient.full_name,
+                        'room_code': assignment.room.code if assignment.room else None,
+                        'started_at': assignment.started_at.isoformat(),
+                    }
+                )
+        except Exception as ws_error:
+            # Log but don't fail the request
+            print(f'WebSocket broadcast failed: {ws_error}')
 
     def get_queryset(self):
         """

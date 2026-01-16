@@ -166,6 +166,31 @@ class KioskOrderConsumer(AsyncWebsocketConsumer):
             'changed_at': event.get('changed_at'),
         }))
 
+    async def order_created_by_staff(self, event):
+        """
+        Handle order_created_by_staff event from channel layer
+        Notifies kiosk that staff created an order for the patient
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'order_created_by_staff',
+            'order_id': event['order_id'],
+            'placed_at': event.get('placed_at'),
+        }))
+
+    async def patient_assigned(self, event):
+        """
+        Handle patient_assigned event from channel layer
+        Notifies kiosk that a new patient has been assigned
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'patient_assigned',
+            'assignment_id': event['assignment_id'],
+            'patient_id': event['patient_id'],
+            'patient_name': event['patient_name'],
+            'room_code': event.get('room_code'),
+            'started_at': event.get('started_at'),
+        }))
+
     @database_sync_to_async
     def get_device_and_validate(self, device_uid):
         """

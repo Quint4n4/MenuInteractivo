@@ -102,6 +102,15 @@ const KioskPage: React.FC = () => {
       if (showOrdersRef.current) {
         loadActiveOrders();
       }
+    } else if (message.type === 'patient_assigned') {
+      console.log('New patient assigned:', message);
+      // Reload patient info and close the "no patient" screen
+      loadData();
+    } else if (message.type === 'order_created_by_staff') {
+      console.log('Order created by staff:', message);
+      // Automatically navigate to order status view
+      setShowOrders(true);
+      loadActiveOrders();
     }
   }, [deviceUid]);
 

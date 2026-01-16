@@ -13,6 +13,7 @@ import { OrderLimitsIndicator } from '../../components/kiosk/OrderLimitsIndicato
 import { LimitReachedModal } from '../../components/kiosk/LimitReachedModal';
 import { WelcomeModal } from '../../components/kiosk/WelcomeModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { useKioskState } from '../../hooks/useKioskState';
 import { colors } from '../../styles/colors';
 
 const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
@@ -33,6 +34,7 @@ export const KioskHomePage: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [patientInfo, setPatientInfo] = useState<PatientInfo | null>(null);
+  const [patientId, setPatientId] = useState<number | null>(null);
   const [featuredProduct, setFeaturedProduct] = useState<Product | null>(null);
   const [carouselCategories, setCarouselCategories] = useState<ProductCategory[]>([]);
   const [categoryProducts, setCategoryProducts] = useState<Map<number, Product[]>>(new Map());
@@ -44,7 +46,14 @@ export const KioskHomePage: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLimitsIndicator, setShowLimitsIndicator] = useState(false);
   const [showLimitReachedModal, setShowLimitReachedModal] = useState(false);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Use kiosk state hook for persistent state management
+  const { hasSeenWelcome, setHasSeenWelcome, updateActivity } = useKioskState(
+    deviceId || '',
+    patientId
+  );
+
+  const [showWelcomeModal, setShowWelcomeModal] = useState(!hasSeenWelcome);
 
   useEffect(() => {
     loadHomeData();
@@ -76,6 +85,7 @@ export const KioskHomePage: React.FC = () => {
       if (deviceId) {
         try {
           const patientData = await kioskApi.getActivePatient(deviceId);
+          setPatientId(patientData.patient.id);
           setPatientInfo({
             full_name: patientData.patient.full_name,
             room_code: patientData.room.code,
@@ -83,8 +93,10 @@ export const KioskHomePage: React.FC = () => {
             order_limits: patientData.order_limits || {},
           });
 
-          // Show welcome modal after loading patient data
-          setTimeout(() => setShowWelcomeModal(true), 1000);
+          // Show welcome modal only if not seen before (managed by useKioskState)
+          if (!hasSeenWelcome) {
+            setTimeout(() => setShowWelcomeModal(true), 1000);
+          }
 
         } catch (error) {
           console.error('Error loading patient data:', error);
@@ -128,6 +140,10 @@ export const KioskHomePage: React.FC = () => {
       if (deviceId) {
         navigate(`/kiosk/${deviceId}/orders`, { replace: true });
       }
+    } else if (message.type === 'patient_assigned') {
+      console.log('New patient assigned - reloading home data');
+      // Reload home data when a new patient is assigned
+      loadHomeData();
     }
   }, [deviceId, navigate]);
 
@@ -156,6 +172,9 @@ export const KioskHomePage: React.FC = () => {
   ];
 
   const handleAddToCart = (productId: number) => {
+    // Update activity timestamp
+    updateActivity();
+
     // Find product
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
@@ -212,6 +231,9 @@ export const KioskHomePage: React.FC = () => {
 
   const handleCheckout = async () => {
     if (!deviceId || cart.size === 0) return;
+
+    // Update activity timestamp
+    updateActivity();
 
     try {
       const items = Array.from(cart.entries()).map(([product_id, quantity]) => ({
@@ -407,7 +429,10 @@ export const KioskHomePage: React.FC = () => {
         show={showWelcomeModal}
         patientName={patientInfo?.full_name || ''}
         orderLimits={patientInfo?.order_limits}
-        onClose={() => setShowWelcomeModal(false)}
+        onClose={() => {
+          setShowWelcomeModal(false);
+          setHasSeenWelcome(true);
+        }}
       />
     </div>
   );
