@@ -178,6 +178,16 @@ export const KioskHomePage: React.FC = () => {
       // If an order status changed, we need to recalculate limits
       // Reload home data to update activeOrdersItems
       loadHomeData();
+    } else if (message.type === 'limits_updated') {
+      console.log('Order limits updated by staff - reloading patient data');
+      // When staff updates limits, reload patient data to get new limits
+      loadHomeData();
+    } else if (message.type === 'session_ended') {
+      console.log('Patient session ended by staff - redirecting to kiosk page');
+      // When staff ends the session, redirect to the main kiosk page
+      if (deviceId) {
+        navigate(`/kiosk/${deviceId}`, { replace: true });
+      }
     }
   }, [deviceId, navigate]);
 
@@ -426,6 +436,9 @@ export const KioskHomePage: React.FC = () => {
           onClose={() => setShowCart(false)}
           onUpdateQuantity={handleUpdateQuantity}
           onCheckout={handleCheckout}
+          orderLimits={patientInfo?.order_limits || {}}
+          activeOrdersItems={activeOrdersItems}
+          onLimitReached={() => setShowLimitReachedModal(true)}
         />
       )}
 

@@ -206,8 +206,27 @@ class PatientAssignmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        # Store device info before ending care
+        device_id = assignment.device.id if assignment.device else None
+
         # End the care
         assignment.end_care()
+
+        # Broadcast session ended to kiosk
+        try:
+            if device_id:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f'device_{device_id}',
+                    {
+                        'type': 'session_ended',
+                        'assignment_id': assignment.id,
+                        'ended_at': assignment.ended_at.isoformat(),
+                    }
+                )
+        except Exception as ws_error:
+            # Log but don't fail the request
+            print(f'WebSocket broadcast failed: {ws_error}')
 
         serializer = self.get_serializer(assignment)
         return Response(serializer.data)
@@ -264,6 +283,22 @@ class PatientAssignmentViewSet(viewsets.ModelViewSet):
         # Update limits
         assignment.order_limits = order_limits
         assignment.save(update_fields=['order_limits', 'updated_at'])
+
+        # Broadcast limits update to kiosk
+        try:
+            if assignment.device:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f'device_{assignment.device.id}',
+                    {
+                        'type': 'limits_updated',
+                        'assignment_id': assignment.id,
+                        'order_limits': order_limits,
+                    }
+                )
+        except Exception as ws_error:
+            # Log but don't fail the request
+            print(f'WebSocket broadcast failed: {ws_error}')
 
         serializer = self.get_serializer(assignment)
         return Response(serializer.data)

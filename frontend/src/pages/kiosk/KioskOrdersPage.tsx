@@ -82,8 +82,14 @@ export const KioskOrdersPage: React.FC = () => {
           console.error('Failed to reload orders:', error);
         }
       }
+    } else if (message.type === 'session_ended') {
+      console.log('Patient session ended by staff - redirecting to kiosk page');
+      // When staff ends the session, redirect to the main kiosk page
+      if (deviceId) {
+        navigate(`/kiosk/${deviceId}`, { replace: true });
+      }
     }
-  }, [deviceId]);
+  }, [deviceId, navigate]);
 
   // WebSocket connection for real-time order updates
   const wsUrl = deviceId ? `${WS_BASE_URL}/ws/kiosk/orders/?device_uid=${deviceId}` : '';

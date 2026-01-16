@@ -13,6 +13,9 @@ interface CartModalProps {
   onClose: () => void;
   onUpdateQuantity: (productId: number, quantity: number) => void;
   onCheckout: () => void;
+  orderLimits?: { [key: string]: number };
+  activeOrdersItems?: Map<string, number>;
+  onLimitReached?: () => void;
 }
 
 export const CartModal: React.FC<CartModalProps> = ({
@@ -21,6 +24,9 @@ export const CartModal: React.FC<CartModalProps> = ({
   onClose,
   onUpdateQuantity,
   onCheckout,
+  orderLimits = {},
+  activeOrdersItems = new Map(),
+  onLimitReached,
 }) => {
   const cartItems: CartItem[] = [];
 
@@ -34,6 +40,44 @@ export const CartModal: React.FC<CartModalProps> = ({
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleIncrement = (productId: number, currentQty: number) => {
+    // Find the product to check its category type
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const categoryType = product.category_type || 'OTHER';
+    const limit = orderLimits[categoryType];
+
+    // If there's a limit for this category, validate
+    if (limit !== undefined) {
+      // Count current items in cart for this category
+      let cartCount = 0;
+      cart.forEach((quantity, prodId) => {
+        const cartProduct = products.find(p => p.id === prodId);
+        if (cartProduct && cartProduct.category_type === categoryType) {
+          // Add the increment for the current product
+          if (prodId === productId) {
+            cartCount += quantity + 1; // Include the new quantity
+          } else {
+            cartCount += quantity;
+          }
+        }
+      });
+
+      // Count items in active orders for this category
+      const ordersCount = activeOrdersItems.get(categoryType) || 0;
+      const totalCount = cartCount + ordersCount;
+
+      console.log(`Validating limit for ${categoryType}: cart=${cartCount}, orders=${ordersCount}, total=${totalCount}, limit=${limit}`);
+
+      if (totalCount > limit) {
+        console.log(`Cannot increment: would exceed limit for ${categoryType}`);
+        if (onLimitReached) {
+          onLimitReached();
+        }
+        return;
+      }
+    }
+
     onUpdateQuantity(productId, currentQty + 1);
   };
 

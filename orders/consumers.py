@@ -191,6 +191,28 @@ class KioskOrderConsumer(AsyncWebsocketConsumer):
             'started_at': event.get('started_at'),
         }))
 
+    async def limits_updated(self, event):
+        """
+        Handle limits_updated event from channel layer
+        Notifies kiosk that order limits have been updated by staff
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'limits_updated',
+            'assignment_id': event['assignment_id'],
+            'order_limits': event['order_limits'],
+        }))
+
+    async def session_ended(self, event):
+        """
+        Handle session_ended event from channel layer
+        Notifies kiosk that the patient session has been ended by staff
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'session_ended',
+            'assignment_id': event['assignment_id'],
+            'ended_at': event.get('ended_at'),
+        }))
+
     @database_sync_to_async
     def get_device_and_validate(self, device_uid):
         """
