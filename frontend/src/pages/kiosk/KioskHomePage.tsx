@@ -56,10 +56,38 @@ export const KioskHomePage: React.FC = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(!hasSeenWelcome);
   const [showInitialWelcome, setShowInitialWelcome] = useState(true);
   const [checkingPatient, setCheckingPatient] = useState(false);
+  const [patientAssigned, setPatientAssigned] = useState(false);
 
   useEffect(() => {
     loadHomeData();
   }, [deviceId]);
+
+  // Check for patient assignment periodically when on initial welcome screen
+  useEffect(() => {
+    if (!showInitialWelcome || patientAssigned) return;
+
+    const checkPatient = async () => {
+      try {
+        if (deviceId) {
+          const patientData = await kioskApi.getActivePatient(deviceId);
+          if (patientData && patientData.patient) {
+            setPatientAssigned(true);
+          }
+        }
+      } catch (error) {
+        // No patient assigned yet
+        setPatientAssigned(false);
+      }
+    };
+
+    // Check immediately
+    checkPatient();
+
+    // Then check every 3 seconds
+    const interval = setInterval(checkPatient, 3000);
+
+    return () => clearInterval(interval);
+  }, [deviceId, showInitialWelcome, patientAssigned]);
 
   const loadHomeData = async () => {
     try {
@@ -180,7 +208,9 @@ export const KioskHomePage: React.FC = () => {
         navigate(`/kiosk/${deviceId}/orders`, { replace: true });
       }
     } else if (message.type === 'patient_assigned') {
-      console.log('New patient assigned - reloading home data');
+      console.log('New patient assigned - updating state and reloading');
+      // Update patient assigned state immediately for button enable
+      setPatientAssigned(true);
       // Reload home data when a new patient is assigned
       loadHomeData();
     } else if (message.type === 'order_status_changed') {
@@ -193,11 +223,15 @@ export const KioskHomePage: React.FC = () => {
       // When staff updates limits, reload patient data to get new limits
       loadHomeData();
     } else if (message.type === 'session_ended') {
-      console.log('Patient session ended by staff - redirecting to kiosk page');
-      // When staff ends the session, redirect to the main kiosk page
-      if (deviceId) {
-        navigate(`/kiosk/${deviceId}`, { replace: true });
-      }
+      console.log('Patient session ended by staff - returning to welcome screen');
+      // Reset all state to show initial welcome screen
+      setPatientInfo(null);
+      setPatientId(null);
+      setPatientAssigned(false);
+      setShowInitialWelcome(true);
+      setShowWelcomeModal(false);
+      setCart(new Map());
+      setActiveOrdersItems(new Map());
     }
   }, [deviceId, navigate]);
 
@@ -391,6 +425,7 @@ export const KioskHomePage: React.FC = () => {
         deviceUid={deviceId || ''}
         onViewMenu={handleViewMenu}
         loading={checkingPatient}
+        patientAssigned={patientAssigned}
       />
     );
   }

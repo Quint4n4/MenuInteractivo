@@ -5,13 +5,16 @@ interface InitialWelcomeScreenProps {
   deviceUid: string;
   onViewMenu: () => void;
   loading?: boolean;
+  patientAssigned?: boolean;
 }
 
 export const InitialWelcomeScreen: React.FC<InitialWelcomeScreenProps> = ({
   deviceUid,
   onViewMenu,
   loading = false,
+  patientAssigned = false,
 }) => {
+  const isButtonDisabled = !patientAssigned || loading;
   return (
     <div style={styles.container}>
       {/* Logo Section */}
@@ -49,12 +52,18 @@ export const InitialWelcomeScreen: React.FC<InitialWelcomeScreenProps> = ({
         </div>
 
         <button
-          style={loading ? styles.buttonDisabled : styles.button}
+          style={isButtonDisabled ? styles.buttonDisabled : styles.button}
           onClick={onViewMenu}
-          disabled={loading}
+          disabled={isButtonDisabled}
         >
-          {loading ? 'Verificando...' : 'Ver Menú'}
+          {loading ? 'Verificando...' : patientAssigned ? 'Ver Menú' : 'Esperando registro...'}
         </button>
+
+        {!patientAssigned && (
+          <p style={styles.waitingMessage}>
+            Por favor espera a que tu enfermera te registre en el sistema
+          </p>
+        )}
 
         <p style={styles.footer}>
           Dispositivo: {deviceUid}
@@ -176,6 +185,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: '40px',
     fontSize: '14px',
     color: 'rgba(255, 255, 255, 0.7)',
+  },
+  waitingMessage: {
+    marginTop: '20px',
+    fontSize: '18px',
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontStyle: 'italic',
   },
 };
 

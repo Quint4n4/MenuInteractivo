@@ -77,7 +77,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         </p>
 
         <button style={styles.button} onClick={onClose}>
-          Ver Menú
+          OK
         </button>
       </div>
     </div>

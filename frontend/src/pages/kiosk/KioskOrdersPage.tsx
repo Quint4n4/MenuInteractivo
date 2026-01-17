@@ -83,10 +83,10 @@ export const KioskOrdersPage: React.FC = () => {
         }
       }
     } else if (message.type === 'session_ended') {
-      console.log('Patient session ended by staff - redirecting to kiosk page');
-      // When staff ends the session, redirect to the main kiosk page
+      console.log('Patient session ended by staff - redirecting to home page');
+      // When staff ends the session, redirect to the home page (shows welcome screen)
       if (deviceId) {
-        navigate(`/kiosk/${deviceId}`, { replace: true });
+        navigate(`/kiosk/${deviceId}/home`, { replace: true });
       }
     }
   }, [deviceId, navigate]);
