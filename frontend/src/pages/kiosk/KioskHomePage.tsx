@@ -238,24 +238,31 @@ export const KioskHomePage: React.FC = () => {
       setMostOrderedProducts(mostOrdered);
 
       // Load products for each category (for carousels)
-      // Try most ordered first, fallback to all products if empty
+      // Try most ordered first, fallback to all products if empty or error
       const productsMap = new Map<number, Product[]>();
       for (const category of categories) {
+        let products: Product[] = [];
+
         try {
           // First try to get most ordered products
-          let products = await productsApi.getMostOrderedByCategory(category.id, 5);
+          products = await productsApi.getMostOrderedByCategory(category.id, 5);
+        } catch (error) {
+          console.log(`Most ordered endpoint not available for category ${category.id}, using fallback`);
+          products = [];
+        }
 
-          // If no most-ordered products, fallback to all products (limited to 5)
-          if (!products || products.length === 0) {
+        // If no most-ordered products (empty or error), fallback to all products
+        if (!products || products.length === 0) {
+          try {
             const allProducts = await productsApi.getProductsByCategory(category.id);
             products = allProducts.slice(0, 5);
+          } catch (fallbackError) {
+            console.error(`Error loading fallback products for category ${category.id}:`, fallbackError);
+            products = [];
           }
-
-          productsMap.set(category.id, products);
-        } catch (error) {
-          console.error(`Error loading products for category ${category.id}:`, error);
-          productsMap.set(category.id, []);
         }
+
+        productsMap.set(category.id, products);
       }
       setCategoryProducts(productsMap);
 
@@ -595,7 +602,6 @@ export const KioskHomePage: React.FC = () => {
       {/* Category Carousels */}
       {carouselCategories.map((category) => {
         const products = categoryProducts.get(category.id) || [];
-        if (products.length === 0) return null;
 
         return (
           <div
@@ -603,13 +609,16 @@ export const KioskHomePage: React.FC = () => {
             ref={(el) => {
               if (el) categoryRefs.current.set(category.id, el);
             }}
+            style={{ scrollMarginTop: '100px' }}
           >
-            <CategoryCarousel
-              category={category}
-              products={products}
-              onAddToCart={handleAddToCart}
-              onViewAll={handleViewAll}
-            />
+            {products.length > 0 && (
+              <CategoryCarousel
+                category={category}
+                products={products}
+                onAddToCart={handleAddToCart}
+                onViewAll={handleViewAll}
+              />
+            )}
           </div>
         );
       })}
