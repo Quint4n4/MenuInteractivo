@@ -27,6 +27,7 @@ export const KioskCategoryPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<ProductCategory | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [cartProducts, setCartProducts] = useState<Product[]>([]); // Products from cart (may be from other categories)
   const [patientInfo, setPatientInfo] = useState<{
     full_name: string;
     room_code: string;
@@ -120,6 +121,28 @@ export const KioskCategoryPage: React.FC = () => {
       // Load ALL products for this category (not just most ordered)
       const productsData = await productsApi.getProductsByCategory(parseInt(categoryId));
       setProducts(productsData);
+
+      // Load products that are in the cart but not in this category
+      // This is needed for the CartModal to display all cart items
+      const currentCart = cart;
+      if (currentCart.size > 0) {
+        const productIdsInCart = Array.from(currentCart.keys());
+        const productIdsInCategory = new Set(productsData.map((p: Product) => p.id));
+        const missingProductIds = productIdsInCart.filter(id => !productIdsInCategory.has(id));
+
+        if (missingProductIds.length > 0) {
+          try {
+            // Load all public products to find the missing ones
+            const allPublicProducts = await productsApi.getPublicProducts();
+            const missingProducts = allPublicProducts.results?.filter((p: Product) =>
+              missingProductIds.includes(p.id)
+            ) || [];
+            setCartProducts(missingProducts);
+          } catch (error) {
+            console.error('Error loading cart products:', error);
+          }
+        }
+      }
 
       // Load active orders if not passed in state
       if (deviceId && activeOrdersItems.size === 0) {
@@ -266,7 +289,13 @@ export const KioskCategoryPage: React.FC = () => {
 
   // Get all products including those in cart from other categories
   const getAllProducts = (): Product[] => {
-    return products;
+    // Combine products from this category with products from cart (other categories)
+    const allProducts = [...products, ...cartProducts];
+    // Remove duplicates by id
+    const uniqueProducts = allProducts.filter((product, index, self) =>
+      index === self.findIndex(p => p.id === product.id)
+    );
+    return uniqueProducts;
   };
 
   const cartTotal = Array.from(cart.values()).reduce((sum, qty) => sum + qty, 0);

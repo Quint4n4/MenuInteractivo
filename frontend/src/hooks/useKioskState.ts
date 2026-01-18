@@ -27,8 +27,9 @@ export const useKioskState = (deviceUid: string, currentPatientId: number | null
         return null;
       }
 
-      // Check if patient has changed
-      if (state.currentPatientId !== currentPatientId) {
+      // Only check patient change if we have a valid currentPatientId
+      // (don't reset during initial load when patientId is null)
+      if (currentPatientId !== null && state.currentPatientId !== currentPatientId) {
         // Patient changed, reset state
         localStorage.removeItem(storageKey);
         return null;
@@ -48,10 +49,9 @@ export const useKioskState = (deviceUid: string, currentPatientId: number | null
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
+    // Only update if we have a valid patient ID
+    // Don't clear state when patientId is null (might just be loading)
     if (currentPatientId === null) {
-      // No patient assigned, clear state
-      localStorage.removeItem(storageKey);
-      setHasSeenWelcome(false);
       return;
     }
 
