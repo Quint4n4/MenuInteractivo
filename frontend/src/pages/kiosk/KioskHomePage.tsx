@@ -574,6 +574,7 @@ export const KioskHomePage: React.FC = () => {
         <CategoryQuickNav
           categories={carouselCategories}
           onCategoryClick={scrollToCategory}
+          onFoodClick={() => navigate(`/kiosk/${deviceId}/food`)}
           orderLimits={patientInfo?.order_limits}
           currentCounts={getCurrentCounts()}
         />

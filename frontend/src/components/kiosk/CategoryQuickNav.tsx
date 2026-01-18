@@ -5,6 +5,7 @@ import { colors } from '../../styles/colors';
 interface CategoryQuickNavProps {
   categories: ProductCategory[];
   onCategoryClick: (categoryId: number) => void;
+  onFoodClick?: () => void; // Special handler for FOOD category
   orderLimits?: { DRINK?: number; SNACK?: number };
   currentCounts?: Map<string, number>; // Current items in cart + active orders per category type
 }
@@ -12,6 +13,7 @@ interface CategoryQuickNavProps {
 export const CategoryQuickNav: React.FC<CategoryQuickNavProps> = ({
   categories,
   onCategoryClick,
+  onFoodClick,
   orderLimits = {},
   currentCounts = new Map(),
 }) => {
@@ -61,7 +63,14 @@ export const CategoryQuickNav: React.FC<CategoryQuickNavProps> = ({
                 ...styles.categoryButton,
                 ...(isLimitReached ? styles.categoryButtonDisabled : {}),
               }}
-              onClick={() => onCategoryClick(category.id)}
+              onClick={() => {
+                // If FOOD category and we have a special handler, use it
+                if (category.category_type === 'FOOD' && onFoodClick) {
+                  onFoodClick();
+                } else {
+                  onCategoryClick(category.id);
+                }
+              }}
               className="category-nav-button"
             >
               <div style={styles.iconWrapper}>
