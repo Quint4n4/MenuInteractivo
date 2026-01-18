@@ -602,6 +602,16 @@ export const KioskHomePage: React.FC = () => {
 
       {/* Category Carousels */}
       {carouselCategories.map((category) => {
+        // Skip FOOD category carousel (it navigates to separate page)
+        const isFoodCategory =
+          category.category_type === 'FOOD' ||
+          category.name.toLowerCase().includes('comida') ||
+          category.name.toLowerCase().includes('ordenar');
+
+        if (isFoodCategory) {
+          return null;
+        }
+
         const products = categoryProducts.get(category.id) || [];
 
         return (

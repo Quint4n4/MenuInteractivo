@@ -20,10 +20,17 @@ export const CategoryQuickNav: React.FC<CategoryQuickNavProps> = ({
   // Get limit info for a category
   const getLimitInfo = (category: ProductCategory) => {
     const categoryType = category.category_type;
+
+    // Check if this is the FOOD category (by type or name)
+    const isFoodCategory =
+      categoryType === 'FOOD' ||
+      category.name.toLowerCase().includes('comida') ||
+      category.name.toLowerCase().includes('ordenar');
+
     if (!categoryType || categoryType === 'OTHER') return null;
 
     // FOOD has no limit
-    if (categoryType === 'FOOD') {
+    if (isFoodCategory) {
       return { hasLimit: false, text: 'Sin limite' };
     }
 
@@ -65,7 +72,20 @@ export const CategoryQuickNav: React.FC<CategoryQuickNavProps> = ({
               }}
               onClick={() => {
                 // If FOOD category and we have a special handler, use it
-                if (category.category_type === 'FOOD' && onFoodClick) {
+                // Check both category_type and name to be more robust
+                const isFoodCategory =
+                  category.category_type === 'FOOD' ||
+                  category.name.toLowerCase().includes('comida') ||
+                  category.name.toLowerCase().includes('ordenar');
+
+                console.log('Category clicked:', {
+                  name: category.name,
+                  category_type: category.category_type,
+                  isFoodCategory,
+                  hasOnFoodClick: !!onFoodClick
+                });
+
+                if (isFoodCategory && onFoodClick) {
                   onFoodClick();
                 } else {
                   onCategoryClick(category.id);
