@@ -237,12 +237,25 @@ export const KioskHomePage: React.FC = () => {
       const mostOrdered = await productsApi.getMostOrderedProducts();
       setMostOrderedProducts(mostOrdered);
 
-      // Load MOST ORDERED products for each category (for carousels)
+      // Load products for each category (for carousels)
+      // Try most ordered first, fallback to all products if empty
       const productsMap = new Map<number, Product[]>();
       for (const category of categories) {
-        // Load most ordered products for this category (limit 5 for carousel)
-        const products = await productsApi.getMostOrderedByCategory(category.id, 5);
-        productsMap.set(category.id, products);
+        try {
+          // First try to get most ordered products
+          let products = await productsApi.getMostOrderedByCategory(category.id, 5);
+
+          // If no most-ordered products, fallback to all products (limited to 5)
+          if (!products || products.length === 0) {
+            const allProducts = await productsApi.getProductsByCategory(category.id);
+            products = allProducts.slice(0, 5);
+          }
+
+          productsMap.set(category.id, products);
+        } catch (error) {
+          console.error(`Error loading products for category ${category.id}:`, error);
+          productsMap.set(category.id, []);
+        }
       }
       setCategoryProducts(productsMap);
 
