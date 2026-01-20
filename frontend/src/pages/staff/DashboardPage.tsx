@@ -174,25 +174,44 @@ const DashboardPage: React.FC = () => {
   };
 
   const playNotificationSound = () => {
-    if (!soundEnabled || !audioContext) {
-      // Si no está habilitado, intentar inicializar y reproducir
-      if (initializeAudio()) {
-        // Esperar un poco y reproducir
-        setTimeout(() => playTestSound(), 100);
-      }
+    // Si no está habilitado, no reproducir
+    if (!soundEnabled) {
       return;
     }
 
+    // Si no hay audioContext pero está habilitado, inicializar uno
+    if (!audioContext) {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      setAudioContext(ctx);
+      // Esperar un poco y reproducir
+      setTimeout(() => {
+        playBeepSoundWithContext(ctx);
+      }, 100);
+      return;
+    }
+
+    // Reproducir con el contexto existente
+    playBeepSoundWithContext(audioContext);
+  };
+
+  // Función auxiliar para reproducir sonido con manejo de contexto suspendido
+  const playBeepSoundWithContext = (ctx: AudioContext) => {
     try {
       // Resumir el contexto si está suspendido (requerido en iOS/Safari)
-      if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-          playBeepSound(audioContext);
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          playBeepSound(ctx);
         }).catch((error) => {
           console.error('Failed to resume audio context:', error);
+          // Intentar reproducir de todos modos
+          try {
+            playBeepSound(ctx);
+          } catch (e) {
+            console.error('Failed to play beep after resume:', e);
+          }
         });
       } else {
-        playBeepSound(audioContext);
+        playBeepSound(ctx);
       }
     } catch (error) {
       console.error('Failed to play notification sound:', error);
@@ -409,7 +428,8 @@ const DashboardPage: React.FC = () => {
               <button
                 onClick={() => {
                   initializeAudio();
-                  playNotificationSound();
+                  // Reproducir sonido de confirmación
+                  setTimeout(() => playNotificationSound(), 200);
                 }}
                 style={{
                   ...styles.enableSoundButton,
@@ -417,7 +437,7 @@ const DashboardPage: React.FC = () => {
                   fontSize: isMobile ? '12px' : '14px',
                   marginRight: '8px'
                 }}
-                title="Activar Sonidos"
+                title="Activar Sonidos - Se reproducirán cuando lleguen nuevas órdenes"
               >
                 🔊 Activar Sonidos
               </button>
