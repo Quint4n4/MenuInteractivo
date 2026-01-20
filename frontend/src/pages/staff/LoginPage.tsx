@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { colors, gradients } from '../../styles/colors';
+import logoHorizontal from '../../assets/logos/logo-horizontal.png';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +21,7 @@ const LoginPage: React.FC = () => {
       await login({ email, password });
       navigate('/staff/dashboard');
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'Login failed. Please check your credentials.';
+      const errorMsg = err.response?.data?.error || 'Error de inicio de sesión. Por favor verifica tus credenciales.';
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -29,26 +31,52 @@ const LoginPage: React.FC = () => {
   return (
     <div style={styles.container}>
       <div style={styles.loginBox}>
-        <h1 style={styles.title}>Staff Login</h1>
+        <div style={styles.header}>
+          <div style={styles.logoContainer}>
+            <img 
+              src={logoHorizontal} 
+              alt="Clínica CAMSA" 
+              style={styles.logo}
+            />
+          </div>
+          <h1 style={styles.title}>Login de Enfermería</h1>
+          <p style={styles.subtitle}>Acceso del Personal de Salud</p>
+        </div>
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Email</label>
+            <label style={styles.label}>Correo Electrónico</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.primary;
+                e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = colors.primaryMuted;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
               style={styles.input}
               required
               autoComplete="email"
-              placeholder="admin@test.com"
+              placeholder="enfermera@clinicacamsa.com"
             />
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Password</label>
+            <label style={styles.label}>Contraseña</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.primary;
+                e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = colors.primaryMuted;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
               style={styles.input}
               required
               autoComplete="current-password"
@@ -56,10 +84,31 @@ const LoginPage: React.FC = () => {
             />
           </div>
           {error && <div style={styles.error}>{error}</div>}
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+          <button 
+            type="submit" 
+            style={styles.button} 
+            disabled={loading}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = colors.primaryDark;
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 6px 20px ${colors.shadowGold}`;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = colors.primary;
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 4px 12px ${colors.shadowGold}`;
+              }
+            }}
+          >
+            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
+        <div style={styles.footer}>
+          <a href="/admin/login" style={styles.link}>Inicio de Sesión del Administrador</a>
+        </div>
       </div>
     </div>
   );
@@ -71,20 +120,50 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.ivory,
+    backgroundImage: `linear-gradient(135deg, ${colors.ivory} 0%, ${colors.cream} 100%)`,
+    padding: '20px',
   },
   loginBox: {
-    backgroundColor: 'white',
-    padding: '40px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    backgroundColor: colors.white,
+    padding: '48px 40px',
+    borderRadius: '16px',
+    boxShadow: colors.shadowGold,
+    border: `2px solid ${colors.primaryMuted}`,
     width: '100%',
-    maxWidth: '400px',
+    maxWidth: '480px',
+    transition: 'transform 0.3s, box-shadow 0.3s',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '36px',
+  },
+  logoContainer: {
+    marginBottom: '24px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logo: {
+    maxWidth: '280px',
+    maxHeight: '80px',
+    objectFit: 'contain',
+    width: '100%',
+    height: 'auto',
   },
   title: {
-    textAlign: 'center',
-    marginBottom: '30px',
-    color: '#2c3e50',
+    margin: 0,
+    marginBottom: '8px',
+    color: colors.textPrimary,
+    fontSize: '32px',
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    margin: 0,
+    color: colors.textSecondary,
+    fontSize: '15px',
+    fontWeight: '500',
+    marginTop: '4px',
   },
   form: {
     display: 'flex',
@@ -97,33 +176,56 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '8px',
   },
   label: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#555',
+    fontSize: '15px',
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: '6px',
   },
   input: {
-    padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
+    padding: '14px 16px',
+    border: `2px solid ${colors.primaryMuted}`,
+    borderRadius: '10px',
     fontSize: '16px',
+    transition: 'all 0.3s',
+    backgroundColor: colors.white,
+    color: colors.textPrimary,
+    outline: 'none',
   },
   button: {
-    padding: '12px',
-    backgroundColor: '#3498db',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    fontSize: '16px',
+    padding: '16px',
+    backgroundColor: colors.primary,
+    color: colors.white,
+    border: `2px solid ${colors.primary}`,
+    borderRadius: '10px',
+    fontSize: '18px',
     fontWeight: 'bold',
     cursor: 'pointer',
     marginTop: '10px',
+    transition: 'all 0.3s',
+    boxShadow: `0 4px 12px ${colors.shadowGold}`,
   },
   error: {
-    padding: '10px',
-    backgroundColor: '#fee',
-    color: '#c33',
-    borderRadius: '5px',
+    padding: '14px 16px',
+    backgroundColor: colors.cream,
+    color: colors.error,
+    borderRadius: '10px',
     fontSize: '14px',
+    border: `2px solid ${colors.error}`,
+    marginTop: '8px',
+    fontWeight: '500',
+  },
+  footer: {
+    marginTop: '24px',
+    textAlign: 'center',
+    paddingTop: '20px',
+    borderTop: `1px solid ${colors.primaryMuted}`,
+  },
+  link: {
+    color: colors.primary,
+    textDecoration: 'none',
+    fontSize: '14px',
+    fontWeight: '600',
+    transition: 'color 0.2s',
   },
 };
 
