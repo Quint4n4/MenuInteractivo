@@ -237,6 +237,13 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  // Detectar si es iOS/Safari
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  // Estado para controlar si mostrar el banner de permisos
+  const [showPermissionBanner, setShowPermissionBanner] = useState(false);
+
   // Registrar Service Worker y solicitar permisos de notificación
   useEffect(() => {
     const registerServiceWorker = async () => {
@@ -244,24 +251,68 @@ const DashboardPage: React.FC = () => {
         try {
           const registration = await navigator.serviceWorker.register('/service-worker.js');
           console.log('Service Worker registrado:', registration.scope);
-
-          // Solicitar permisos de notificación
-          if ('Notification' in window) {
-            if (Notification.permission === 'default') {
-              const permission = await Notification.requestPermission();
-              console.log('Permiso de notificación:', permission);
-            } else if (Notification.permission === 'granted') {
-              console.log('Permisos de notificación ya concedidos');
-            }
+          
+          // Verificar si es iOS y mostrar banner si no hay permisos
+          if (isIOS && Notification.permission === 'default') {
+            setShowPermissionBanner(true);
           }
         } catch (error) {
           console.error('Error registrando Service Worker:', error);
+          // En iOS, el Service Worker puede no estar disponible sin HTTPS o sin PWA instalada
+          if (isIOS) {
+            setShowPermissionBanner(true);
+          }
+        }
+      } else {
+        console.log('Service Worker no disponible');
+        if (isIOS) {
+          setShowPermissionBanner(true);
         }
       }
     };
 
     registerServiceWorker();
   }, []);
+  
+  // Solicitar permisos explícitamente cuando el usuario lo solicite
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('Tu navegador no soporta notificaciones del sistema.');
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      console.log('Permiso de notificación:', permission);
+      
+      if (permission === 'granted') {
+        setShowPermissionBanner(false);
+        alert('✅ Notificaciones activadas. Ahora recibirás alertas cuando lleguen nuevas órdenes.');
+        
+        // Probar enviando una notificación de prueba
+        try {
+          if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            if (registration.active) {
+              registration.active.postMessage({
+                type: 'NOTIFY',
+                orderId: 0,
+                title: 'Notificación de Prueba',
+                body: '¡Las notificaciones están funcionando correctamente!',
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error enviando notificación de prueba:', error);
+        }
+      } else if (permission === 'denied') {
+        alert('❌ Permisos de notificación denegados. Por favor, habilita las notificaciones en la configuración de tu navegador.');
+      }
+    } catch (error) {
+      console.error('Error solicitando permisos:', error);
+      alert('Error al solicitar permisos de notificación.');
+    }
+  };
 
   // Enviar notificación usando Service Worker (funciona incluso con la página cerrada)
   const sendBrowserNotification = async (orderId: number) => {
@@ -629,6 +680,40 @@ const DashboardPage: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* Banner de permisos para iOS/iPad */}
+      {showPermissionBanner && (Notification.permission === 'default' || Notification.permission === 'denied') && (
+        <div style={styles.permissionBanner}>
+          <div style={styles.permissionBannerContent}>
+            <div style={styles.permissionBannerIcon}>🔔</div>
+            <div style={styles.permissionBannerText}>
+              <strong>Activa las Notificaciones</strong>
+              <p>
+                {isIOS 
+                  ? 'Para recibir notificaciones en tu iPad, primero agrega esta app a tu pantalla de inicio y luego haz clic en el botón de abajo.'
+                  : 'Para recibir notificaciones cuando lleguen nuevas órdenes, por favor activa los permisos.'}
+              </p>
+              {isIOS && (
+                <p style={{ fontSize: '12px', marginTop: '8px', color: colors.textSecondary }}>
+                  📱 Instrucciones: Compartir → Agregar a Pantalla de Inicio → Luego activa las notificaciones
+                </p>
+              )}
+            </div>
+            <button 
+              onClick={requestNotificationPermission}
+              style={styles.permissionButton}
+            >
+              {Notification.permission === 'denied' ? 'Abrir Configuración' : 'Activar Notificaciones'}
+            </button>
+            <button
+              onClick={() => setShowPermissionBanner(false)}
+              style={styles.closeBannerButton}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={styles.content}>
         {loading ? (
@@ -1407,6 +1492,59 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '14px',
     fontWeight: 'bold',
     cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  permissionBanner: {
+    backgroundColor: colors.primary,
+    color: colors.white,
+    padding: '16px 20px',
+    boxShadow: colors.shadowGold,
+    borderBottom: `2px solid ${colors.primaryDark}`,
+  },
+  permissionBannerContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    position: 'relative',
+    flexWrap: isMobile ? 'wrap' as const : 'nowrap' as const,
+  },
+  permissionBannerIcon: {
+    fontSize: '32px',
+    flexShrink: 0,
+  },
+  permissionBannerText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  permissionButton: {
+    padding: '12px 24px',
+    backgroundColor: colors.white,
+    color: colors.primary,
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
+  },
+  closeBannerButton: {
+    position: 'absolute',
+    top: '-8px',
+    right: '-8px',
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    color: colors.white,
+    border: 'none',
+    fontSize: '20px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     transition: 'all 0.2s',
   },
 };
