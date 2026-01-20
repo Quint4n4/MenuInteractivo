@@ -19,7 +19,18 @@ export const ThankYouModal: React.FC<ThankYouModalProps> = ({ show, onClose }) =
         <p style={styles.message}>
           Tu opinión es muy importante para nosotros y nos ayuda a mejorar nuestro servicio.
         </p>
-        <button style={styles.button} onClick={onClose}>
+        <button 
+          style={styles.button} 
+          onClick={onClose}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = colors.primaryDark;
+            e.currentTarget.style.borderColor = colors.primaryDark;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = colors.primary;
+            e.currentTarget.style.borderColor = colors.primary;
+          }}
+        >
           OK
         </button>
       </div>
@@ -34,7 +45,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlayDark,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -47,7 +58,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '480px',
     width: '90%',
     textAlign: 'center',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+    boxShadow: `0 8px 32px ${colors.shadowGold}`,
+    border: `1px solid ${colors.primaryMuted}`,
   },
   iconContainer: {
     marginBottom: '24px',
@@ -59,24 +71,24 @@ const styles: { [key: string]: React.CSSProperties } = {
   title: {
     fontSize: '28px',
     fontWeight: 'bold',
-    color: colors.black,
+    color: colors.textPrimary,
     margin: '0 0 16px 0',
   },
   message: {
     fontSize: '16px',
-    color: colors.gray,
+    color: colors.textSecondary,
     lineHeight: '1.5',
     margin: '0 0 32px 0',
   },
   button: {
     padding: '14px 48px',
-    backgroundColor: '#ff9800',
+    backgroundColor: colors.primary,
     color: colors.white,
-    border: 'none',
+    border: `2px solid ${colors.primary}`,
     borderRadius: '8px',
     fontSize: '16px',
-    fontWeight: 'bold',
+    fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s ease',
   },
 };

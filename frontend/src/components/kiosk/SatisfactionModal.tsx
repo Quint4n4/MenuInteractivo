@@ -72,13 +72,32 @@ export const SatisfactionModal: React.FC<SatisfactionModalProps> = ({
                     backgroundColor: rating.color,
                   }}
                   onClick={() => handleRatingSelect(rating.value)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${colors.shadowGold}`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                 >
                   <div style={styles.emoji}>{rating.emoji}</div>
                   <div style={styles.ratingLabel}>{rating.label}</div>
                 </button>
               ))}
             </div>
-            <button style={styles.skipButton} onClick={handleClose}>
+            <button 
+              style={styles.skipButton} 
+              onClick={handleClose}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.primary;
+                e.currentTarget.style.color = colors.white;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.white;
+                e.currentTarget.style.color = colors.primary;
+              }}
+            >
               Saltar
             </button>
           </>
@@ -92,17 +111,39 @@ export const SatisfactionModal: React.FC<SatisfactionModalProps> = ({
               onChange={(e) => setComment(e.target.value)}
               rows={4}
               autoFocus
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.primary;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = colors.primaryMuted;
+              }}
             />
             <div style={styles.commentButtons}>
               <button
                 style={styles.submitWithoutCommentButton}
                 onClick={handleSubmitWithoutComment}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.primary;
+                  e.currentTarget.style.color = colors.white;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.white;
+                  e.currentTarget.style.color = colors.primary;
+                }}
               >
                 Enviar sin comentario
               </button>
               <button
                 style={styles.submitWithCommentButton}
                 onClick={handleSubmitWithComment}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.primaryDark;
+                  e.currentTarget.style.borderColor = colors.primaryDark;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.primary;
+                  e.currentTarget.style.borderColor = colors.primary;
+                }}
               >
                 Enviar con comentario
               </button>
@@ -121,7 +162,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: colors.overlayDark,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -134,23 +175,24 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '600px',
     width: '90%',
     textAlign: 'center',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    boxShadow: `0 8px 32px ${colors.shadowGold}`,
+    border: `1px solid ${colors.primaryMuted}`,
   },
   title: {
     fontSize: '32px',
-    color: '#4caf50',
+    color: colors.primary,
     marginBottom: '10px',
     fontWeight: 'bold',
   },
   subtitle: {
     fontSize: '18px',
-    color: colors.gray,
+    color: colors.textSecondary,
     marginBottom: '30px',
   },
   question: {
     fontSize: '20px',
     fontWeight: 'bold',
-    color: colors.black,
+    color: colors.textPrimary,
     marginBottom: '30px',
   },
   ratingsContainer: {
@@ -185,30 +227,33 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   skipButton: {
     padding: '12px 30px',
-    backgroundColor: colors.gray,
-    color: colors.white,
-    border: 'none',
+    backgroundColor: colors.white,
+    color: colors.primary,
+    border: `2px solid ${colors.primary}`,
     borderRadius: '8px',
     fontSize: '16px',
     cursor: 'pointer',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
   },
   commentLabel: {
     fontSize: '18px',
     fontWeight: 'bold',
-    color: colors.black,
+    color: colors.textPrimary,
     marginBottom: '15px',
   },
   textarea: {
     width: '100%',
     padding: '15px',
     fontSize: '16px',
-    border: `2px solid ${colors.grayLight}`,
+    border: `2px solid ${colors.primaryMuted}`,
     borderRadius: '8px',
     resize: 'vertical',
     fontFamily: 'inherit',
     boxSizing: 'border-box',
     marginBottom: '20px',
+    color: colors.textPrimary,
+    transition: 'border-color 0.2s ease',
   },
   commentButtons: {
     display: 'flex',
@@ -217,25 +262,25 @@ const styles: { [key: string]: React.CSSProperties } = {
   submitWithoutCommentButton: {
     flex: 1,
     padding: '15px 20px',
-    backgroundColor: colors.gray,
-    color: colors.white,
-    border: 'none',
+    backgroundColor: colors.white,
+    color: colors.primary,
+    border: `2px solid ${colors.primary}`,
     borderRadius: '8px',
     fontSize: '16px',
-    fontWeight: 'bold',
+    fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s ease',
   },
   submitWithCommentButton: {
     flex: 1,
     padding: '15px 20px',
-    backgroundColor: '#ff9800',
+    backgroundColor: colors.primary,
     color: colors.white,
-    border: 'none',
+    border: `2px solid ${colors.primary}`,
     borderRadius: '8px',
     fontSize: '16px',
-    fontWeight: 'bold',
+    fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s ease',
   },
 };

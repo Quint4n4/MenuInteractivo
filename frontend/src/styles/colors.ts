@@ -4,18 +4,18 @@
  */
 
 export const colors = {
-  // Primary colors (gold/dorado from logo)
-  primary: '#C9A227',        // Dorado principal del logo
-  primaryLight: '#D4B84A',   // Dorado claro para hover
-  primaryDark: '#A68B1F',    // Dorado oscuro para active/pressed
-  primaryMuted: '#E8DDB5',   // Dorado muy suave para fondos sutiles
+  // Primary colors (gold/dorado elegante)
+  primary: '#C9A961',        // Dorado elegante cálido
+  primaryLight: '#E5D4B1',   // Dorado claro cálido
+  primaryDark: '#9E8142',    // Dorado oscuro cálido
+  primaryMuted: '#E5D4B1',   // Dorado muy suave para fondos sutiles
 
   // Secondary gold tones
-  gold: '#C9A227',
-  goldLight: '#E5D4A1',
-  goldDark: '#8B7355',
-  goldGradientStart: '#D4B84A',
-  goldGradientEnd: '#A68B1F',
+  gold: '#C9A961',
+  goldLight: '#E5D4B1',
+  goldDark: '#9E8142',
+  goldGradientStart: '#E5D4B1',
+  goldGradientEnd: '#9E8142',
 
   // Neutral colors
   white: '#FFFFFF',
@@ -31,7 +31,7 @@ export const colors = {
   textPrimary: '#2D2D2D',
   textSecondary: '#666666',
   textMuted: '#999999',
-  textGold: '#A68B1F',
+  textGold: '#9E8142',
 
   // Status colors (mantenemos para funcionalidad)
   success: '#4CAF50',        // Verde más elegante
@@ -48,11 +48,11 @@ export const colors = {
 
   // UI element colors
   border: '#E0E0E0',
-  borderGold: '#C9A227',
+  borderGold: '#C9A961',
   shadow: 'rgba(0, 0, 0, 0.08)',
   shadowMedium: 'rgba(0, 0, 0, 0.12)',
   shadowDark: 'rgba(0, 0, 0, 0.16)',
-  shadowGold: 'rgba(201, 162, 39, 0.2)',
+  shadowGold: 'rgba(201, 169, 97, 0.3)',
   overlay: 'rgba(0, 0, 0, 0.5)',
   overlayDark: 'rgba(0, 0, 0, 0.7)',
   overlayLight: 'rgba(255, 255, 255, 0.9)',

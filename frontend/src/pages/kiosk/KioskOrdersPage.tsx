@@ -7,6 +7,7 @@ import { SatisfactionModal } from '../../components/kiosk/SatisfactionModal';
 import { ThankYouModal } from '../../components/kiosk/ThankYouModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { colors } from '../../styles/colors';
+import logoHorizontal from '../../assets/logos/logo-horizontal.png';
 
 const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
 
@@ -234,14 +235,18 @@ export const KioskOrdersPage: React.FC = () => {
     <div style={styles.container}>
       {/* Header */}
       <header style={styles.header}>
-        <div>
-          <h1 style={styles.headerTitle}>Orden de Servicio a Habitación</h1>
-          {patientInfo && (
-            <>
-              <p style={styles.welcomeText}>Bienvenido, {patientInfo.full_name}</p>
-              <p style={styles.nurseText}>Tu enfermera: {patientInfo.staff_name}</p>
-            </>
-          )}
+        <div style={styles.headerLeft}>
+          <img src={logoHorizontal} alt="Clínica CAMSA" style={styles.logo} />
+          <div style={styles.headerDivider} />
+          <div>
+            <h1 style={styles.headerTitle}>Servicio a Habitación</h1>
+            {patientInfo && (
+              <>
+                <p style={styles.welcomeText}>Bienvenido, {patientInfo.full_name}</p>
+                <p style={styles.nurseText}>Tu enfermera: {patientInfo.staff_name}</p>
+              </>
+            )}
+          </div>
         </div>
         <div style={styles.headerInfo}>
           {patientInfo && (
@@ -252,7 +257,7 @@ export const KioskOrdersPage: React.FC = () => {
                 <span
                   style={{
                     marginLeft: '10px',
-                    color: isConnected ? '#4caf50' : '#f44336',
+                    color: isConnected ? colors.success : colors.error,
                     fontSize: '12px',
                   }}
                 >
@@ -262,7 +267,11 @@ export const KioskOrdersPage: React.FC = () => {
             </div>
           )}
           {!hasActiveOrders && (
-            <button style={styles.viewMenuButton} onClick={handleNewOrder}>
+            <button 
+              style={styles.viewMenuButton} 
+              onClick={handleNewOrder}
+              className="kiosk-btn-outline"
+            >
               Ver Menú
             </button>
           )}
@@ -322,7 +331,7 @@ export const KioskOrdersPage: React.FC = () => {
                   {/* Order Details (Collapsible) */}
                   {isExpanded && (
                     <div style={styles.orderDetails}>
-                      <h4 style={styles.detailsTitle}>Order Items</h4>
+                      <h4 style={styles.detailsTitle}>Productos del Pedido</h4>
                       <div style={styles.orderItems}>
                         {order.items.map((item) => (
                           <div key={item.id} style={styles.orderItem}>
@@ -376,7 +385,7 @@ export const KioskOrdersPage: React.FC = () => {
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     minHeight: '100vh',
-    backgroundColor: colors.grayBg,
+    backgroundColor: colors.ivory,
   },
   loading: {
     display: 'flex',
@@ -384,40 +393,59 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '100vh',
-    backgroundColor: colors.grayBg,
+    backgroundColor: colors.ivory,
+    color: colors.textSecondary,
   },
   spinner: {
     width: '48px',
     height: '48px',
-    border: `4px solid ${colors.grayLight}`,
+    border: `4px solid ${colors.primaryMuted}`,
     borderTop: `4px solid ${colors.primary}`,
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
   header: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
     backgroundColor: colors.white,
-    padding: '24px 40px',
+    padding: '16px 40px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    boxShadow: `0 2px 8px ${colors.shadow}`,
+    boxShadow: `0 2px 12px ${colors.shadowGold}`,
+    borderBottom: `1px solid ${colors.primaryMuted}`,
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+  },
+  logo: {
+    height: '50px',
+    width: 'auto',
+  },
+  headerDivider: {
+    width: '1px',
+    height: '40px',
+    backgroundColor: colors.primaryMuted,
   },
   headerTitle: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: colors.black,
-    margin: '0 0 8px 0',
+    fontSize: '22px',
+    fontWeight: '600',
+    color: colors.textPrimary,
+    margin: '0 0 4px 0',
   },
   welcomeText: {
-    fontSize: '16px',
-    color: colors.gray,
-    margin: '4px 0',
+    fontSize: '14px',
+    color: colors.primary,
+    margin: '2px 0',
     fontWeight: '500',
   },
   nurseText: {
-    fontSize: '14px',
-    color: colors.gray,
-    margin: '4px 0 0 0',
+    fontSize: '13px',
+    color: colors.textSecondary,
+    margin: '2px 0 0 0',
   },
   headerInfo: {
     display: 'flex',
@@ -428,27 +456,31 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
-    gap: '4px',
+    gap: '2px',
+    padding: '8px 16px',
+    backgroundColor: colors.cream,
+    borderRadius: '8px',
+    border: `1px solid ${colors.primaryMuted}`,
   },
   roomLabel: {
-    fontSize: '16px',
-    fontWeight: 'bold',
-    color: colors.black,
+    fontSize: '15px',
+    fontWeight: '600',
+    color: colors.primary,
   },
   deviceLabel: {
-    fontSize: '12px',
-    color: colors.gray,
+    fontSize: '11px',
+    color: colors.textMuted,
   },
   viewMenuButton: {
     padding: '12px 24px',
-    backgroundColor: '#ff9800',
-    color: colors.white,
-    border: 'none',
+    backgroundColor: colors.white,
+    color: colors.primary,
+    border: `2px solid ${colors.primary}`,
     borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: 'bold',
+    fontSize: '15px',
+    fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s ease',
   },
   ordersSection: {
     padding: '40px',
@@ -464,26 +496,27 @@ const styles: { [key: string]: React.CSSProperties } = {
   ordersTitle: {
     fontSize: '32px',
     fontWeight: 'bold',
-    color: colors.black,
+    color: colors.textPrimary,
     margin: 0,
   },
   newOrderButton: {
     padding: '14px 28px',
-    backgroundColor: '#ff9800',
+    backgroundColor: colors.primary,
     color: colors.white,
-    border: 'none',
+    border: `2px solid ${colors.primary}`,
     borderRadius: '8px',
     fontSize: '16px',
-    fontWeight: 'bold',
+    fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s ease',
   },
   emptyState: {
     textAlign: 'center',
     padding: '80px 20px',
     backgroundColor: colors.white,
     borderRadius: '12px',
-    boxShadow: `0 2px 8px ${colors.shadow}`,
+    boxShadow: `0 2px 12px ${colors.shadowGold}`,
+    border: `1px solid ${colors.primaryMuted}`,
   },
   emptyIcon: {
     fontSize: '64px',
@@ -492,13 +525,14 @@ const styles: { [key: string]: React.CSSProperties } = {
   startOrderButton: {
     marginTop: '24px',
     padding: '14px 32px',
-    backgroundColor: '#ff9800',
+    backgroundColor: colors.primary,
     color: colors.white,
-    border: 'none',
+    border: `2px solid ${colors.primary}`,
     borderRadius: '8px',
     fontSize: '16px',
-    fontWeight: 'bold',
+    fontWeight: '600',
     cursor: 'pointer',
+    transition: 'all 0.2s ease',
   },
   ordersList: {
     display: 'flex',
@@ -508,13 +542,14 @@ const styles: { [key: string]: React.CSSProperties } = {
   orderCard: {
     backgroundColor: colors.white,
     borderRadius: '12px',
-    boxShadow: `0 2px 8px ${colors.shadow}`,
+    boxShadow: `0 2px 12px ${colors.shadowGold}`,
+    border: `1px solid ${colors.primaryMuted}`,
     overflow: 'hidden',
   },
   orderCardHeader: {
     padding: '24px 32px',
-    backgroundColor: '#f8f9fa',
-    borderBottom: `1px solid ${colors.grayLight}`,
+    backgroundColor: colors.cream,
+    borderBottom: `1px solid ${colors.primaryMuted}`,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -522,34 +557,34 @@ const styles: { [key: string]: React.CSSProperties } = {
   orderNumber: {
     fontSize: '20px',
     fontWeight: 'bold',
-    color: colors.black,
+    color: colors.textPrimary,
     margin: '0 0 4px 0',
   },
   orderTime: {
     fontSize: '14px',
-    color: colors.gray,
+    color: colors.textSecondary,
     margin: 0,
   },
   detailsButton: {
     padding: '10px 20px',
-    backgroundColor: '#ff9800',
+    backgroundColor: colors.primary,
     color: colors.white,
-    border: 'none',
+    border: `2px solid ${colors.primary}`,
     borderRadius: '6px',
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s ease',
   },
   orderDetails: {
     padding: '24px 32px',
-    borderTop: `1px solid ${colors.grayLight}`,
-    backgroundColor: '#fafafa',
+    borderTop: `1px solid ${colors.primaryMuted}`,
+    backgroundColor: colors.ivory,
   },
   detailsTitle: {
     fontSize: '16px',
     fontWeight: 'bold',
-    color: colors.black,
+    color: colors.textPrimary,
     margin: '0 0 16px 0',
   },
   orderItems: {
@@ -564,6 +599,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '12px 16px',
     backgroundColor: colors.white,
     borderRadius: '8px',
+    border: `1px solid ${colors.primaryMuted}`,
   },
   orderItemInfo: {
     display: 'flex',
@@ -573,42 +609,62 @@ const styles: { [key: string]: React.CSSProperties } = {
   orderItemName: {
     fontSize: '15px',
     fontWeight: '500',
-    color: colors.black,
+    color: colors.textPrimary,
   },
   orderItemUnit: {
     fontSize: '13px',
-    color: colors.gray,
+    color: colors.textSecondary,
   },
   orderItemQuantity: {
     fontSize: '16px',
     fontWeight: 'bold',
-    color: '#ff9800',
+    color: colors.primary,
   },
   deliveredInfo: {
     marginTop: '16px',
     padding: '12px 16px',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: colors.success + '15', // 15 = ~8% opacity
     borderRadius: '8px',
+    border: `1px solid ${colors.success}40`, // 40 = ~25% opacity
     display: 'flex',
     gap: '8px',
   },
   deliveredLabel: {
     fontSize: '14px',
     fontWeight: 'bold',
-    color: '#2e7d32',
+    color: colors.success,
   },
   deliveredTime: {
     fontSize: '14px',
-    color: '#2e7d32',
+    color: colors.success,
   },
 };
 
-// Add keyframes for spinner animation
+// Add keyframes and button hover styles
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+
+  .kiosk-btn-outline {
+    background-color: ${colors.white} !important;
+    color: ${colors.primary} !important;
+    border: 2px solid ${colors.primary} !important;
+  }
+
+  .kiosk-btn-outline:hover {
+    background-color: ${colors.primary} !important;
+    color: ${colors.white} !important;
+  }
+
+  .kiosk-btn-outline:active {
+    background-color: ${colors.primaryDark} !important;
+    border-color: ${colors.primaryDark} !important;
+  }
 `;
-document.head.appendChild(styleSheet);
+if (!document.head.querySelector('[data-kiosk-orders-styles]')) {
+  styleSheet.setAttribute('data-kiosk-orders-styles', 'true');
+  document.head.appendChild(styleSheet);
+}
