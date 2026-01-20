@@ -21,6 +21,14 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = ['id', 'full_name', 'phone_e164', 'email', 'is_active', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+    def validate_email(self, value):
+        """
+        Convert empty string to None for optional email field
+        """
+        if value == '' or value is None:
+            return None
+        return value
+
     def validate_phone_e164(self, value):
         """
         Additional validation for phone number in E.164 format
