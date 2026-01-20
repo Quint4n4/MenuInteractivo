@@ -116,7 +116,7 @@ const OrdersPage: React.FC = () => {
           flexDirection: isMobile ? 'column' as const : 'row' as const,
           gap: isMobile ? '10px' : '10px'
         }}>
-          <Link to="/staff" style={{
+          <Link to="/admin/dashboard" style={{
             ...styles.backButton,
             width: isMobile ? '100%' : 'auto',
             textAlign: 'center' as const,
