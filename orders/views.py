@@ -387,6 +387,20 @@ class OrderManagementViewSet(viewsets.ReadOnlyModelViewSet):
 
                     order.delivered_at = timezone.now()
 
+                    # Block patient from creating new orders when order is delivered
+                    # Check if there are any other active orders (PLACED, PREPARING, READY)
+                    from clinic.models import PatientAssignment
+                    if order.patient_assignment:
+                        other_active_orders = Order.objects.filter(
+                            patient_assignment=order.patient_assignment,
+                            status__in=['PLACED', 'PREPARING', 'READY']
+                        ).exclude(id=order.id).exists()
+                        
+                        # Only block patient orders if there are no other active orders
+                        if not other_active_orders:
+                            order.patient_assignment.can_patient_order = False
+                            order.patient_assignment.save(update_fields=['can_patient_order', 'updated_at'])
+
                 # Update order status
                 order.status = to_status
 
