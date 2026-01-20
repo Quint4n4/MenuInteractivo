@@ -288,7 +288,7 @@ const DashboardPage: React.FC = () => {
         padding: isMobile ? '15px' : '20px'
       }}>
         <div>
-          <h1 style={{fontSize: isMobile ? '20px' : '28px', margin: 0}}>Panel de Enfermera</h1>
+          <h1 style={{fontSize: isMobile ? '20px' : '28px', margin: 0}}>Panel de Enfermería</h1>
           <div style={{...styles.userInfo, fontSize: isMobile ? '12px' : '14px'}}>
             {user?.full_name || user?.email} |
             <span style={{ marginLeft: '10px', color: isConnected ? colors.success : colors.error }}>
