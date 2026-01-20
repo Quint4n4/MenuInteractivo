@@ -1508,7 +1508,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     gap: '16px',
     position: 'relative',
-    flexWrap: isMobile ? 'wrap' as const : 'nowrap' as const,
   },
   permissionBannerIcon: {
     fontSize: '32px',
