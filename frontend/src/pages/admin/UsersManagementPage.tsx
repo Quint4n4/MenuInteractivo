@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminApi } from '../../api/admin';
+import { colors } from '../../styles/colors';
 import { useAuth } from '../../auth/AuthContext';
 
 const UsersManagementPage: React.FC = () => {
@@ -18,6 +19,10 @@ const UsersManagementPage: React.FC = () => {
     is_active: true,
     roles: ['STAFF'],
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const [confirmModal, setConfirmModal] = useState<{
     show: boolean;
     title: string;
@@ -60,6 +65,21 @@ const UsersManagementPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar que las contraseñas coincidan (solo al crear nuevo usuario o si se cambió la contraseña)
+    if ((!editingUser || formData.password) && formData.password !== confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden');
+      return;
+    }
+    
+    // Validar longitud mínima de contraseña
+    if ((!editingUser || formData.password) && formData.password.length > 0 && formData.password.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    
+    setPasswordError('');
+    
     try {
       if (editingUser) {
         await adminApi.updateUser(editingUser.id, formData);
@@ -249,6 +269,14 @@ const UsersManagementPage: React.FC = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = colors.primary;
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = colors.primaryMuted;
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                   style={styles.input}
                   required
                 />
@@ -259,6 +287,14 @@ const UsersManagementPage: React.FC = () => {
                   type="text"
                   value={formData.full_name}
                   onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = colors.primary;
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = colors.primaryMuted;
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                   style={styles.input}
                   required
                 />
@@ -269,6 +305,14 @@ const UsersManagementPage: React.FC = () => {
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = colors.primary;
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = colors.primaryMuted;
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                   style={styles.input}
                   required
                 />
@@ -277,14 +321,109 @@ const UsersManagementPage: React.FC = () => {
                 <label style={styles.label}>
                   Contraseña {editingUser && '(dejar en blanco para mantener actual)'}
                 </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  style={styles.input}
-                  required={!editingUser}
-                />
+                <div style={styles.passwordInputContainer}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => {
+                      setFormData({...formData, password: e.target.value});
+                      if (passwordError) setPasswordError('');
+                    }}
+                    style={{...styles.input, ...styles.passwordInput}}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = colors.primary;
+                      e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.primaryMuted;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    required={!editingUser}
+                    placeholder="Mínimo 8 caracteres"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={styles.passwordToggle}
+                    title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
+              {!editingUser && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Confirmar Contraseña</label>
+                  <div style={styles.passwordInputContainer}>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (passwordError) setPasswordError('');
+                      }}
+                      style={{...styles.input, ...styles.passwordInput}}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = colors.primary;
+                        e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = colors.primaryMuted;
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      required
+                      placeholder="Repite la contraseña"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={styles.passwordToggle}
+                      title={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showConfirmPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                  {passwordError && (
+                    <div style={styles.passwordError}>{passwordError}</div>
+                  )}
+                </div>
+              )}
+              {editingUser && formData.password && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Confirmar Nueva Contraseña</label>
+                  <div style={styles.passwordInputContainer}>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (passwordError) setPasswordError('');
+                      }}
+                      style={{...styles.input, ...styles.passwordInput}}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = colors.primary;
+                        e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryMuted}`;
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = colors.primaryMuted;
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      placeholder="Repite la nueva contraseña"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={styles.passwordToggle}
+                      title={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showConfirmPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                  {passwordError && (
+                    <div style={styles.passwordError}>{passwordError}</div>
+                  )}
+                </div>
+              )}
               <div style={styles.formGroup}>
                 <label style={styles.label}>
                   <input
@@ -476,13 +615,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     zIndex: 1000,
   },
   modal: {
-    backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '8px',
+    backgroundColor: colors.white,
+    padding: '36px',
+    borderRadius: '16px',
     width: '90%',
-    maxWidth: '500px',
+    maxWidth: '520px',
     maxHeight: '90vh',
     overflow: 'auto',
+    boxShadow: colors.shadowGold,
+    border: `2px solid ${colors.primaryMuted}`,
   },
   form: {
     display: 'flex',
