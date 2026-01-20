@@ -22,9 +22,14 @@ const DashboardPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [showPatientModal, setShowPatientModal] = useState(false);
-  const [patientForm, setPatientForm] = useState({
+  const [patientForm, setPatientForm] = useState<{
+    full_name: string;
+    phone_e164: string;
+    email: string;
+  }>({
     full_name: '',
     phone_e164: '',
+    email: '',
   });
   const [activeNotifications, setActiveNotifications] = useState<Array<{id: number; orderId: number; message: string}>>([]);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);

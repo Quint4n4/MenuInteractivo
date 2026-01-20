@@ -179,7 +179,7 @@ export const KioskOrdersPage: React.FC = () => {
           
           // Check if there are delivered orders and survey is not enabled
           const ordersResponse = await ordersApi.getActiveOrdersPublic(deviceId);
-          const deliveredOrders = (ordersResponse.orders || []).filter(order => order.status === 'DELIVERED');
+          const deliveredOrders = (ordersResponse.orders || []).filter((order: Order) => order.status === 'DELIVERED');
           if (deliveredOrders.length > 0 && !patientData.survey_enabled) {
             setShowWaitingForSurveyModal(true);
           }
