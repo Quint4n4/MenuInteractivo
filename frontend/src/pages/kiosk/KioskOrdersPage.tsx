@@ -221,8 +221,10 @@ export const KioskOrdersPage: React.FC = () => {
             setShowWaitingForSurveyModal(true);
           }
           
-          // Check if survey is enabled and not yet completed
-          if (patientData.survey_enabled && !patientData.feedback_completed) {
+          // Check if survey is enabled - show complete survey modal immediately
+          // Don't check for feedback_completed as we rely on backend validation
+          if (patientData.survey_enabled) {
+            setShowWaitingForSurveyModal(false);
             setShowCompleteSurveyModal(true);
           }
         } catch (error) {
