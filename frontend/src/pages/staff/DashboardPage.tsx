@@ -5,6 +5,7 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 import apiClient from '../../api/client';
 import { OrderLimitsConfigurator } from '../../components/staff/OrderLimitsConfigurator';
 import { CreateOrderModal } from '../../components/staff/CreateOrderModal';
+import { colors } from '../../styles/colors';
 
 const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
 
@@ -290,7 +291,7 @@ const DashboardPage: React.FC = () => {
           <h1 style={{fontSize: isMobile ? '20px' : '28px', margin: 0}}>Panel de Enfermera</h1>
           <div style={{...styles.userInfo, fontSize: isMobile ? '12px' : '14px'}}>
             {user?.full_name || user?.email} |
-            <span style={{ marginLeft: '10px', color: isConnected ? '#27ae60' : '#e74c3c' }}>
+            <span style={{ marginLeft: '10px', color: isConnected ? colors.success : colors.error }}>
               {isConnected ? '● En Línea' : '○ Desconectado'}
             </span>
           </div>
@@ -372,7 +373,7 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
 
-          <button onClick={handleLogout} style={styles.logoutButton}>
+          <button onClick={handleLogout} style={styles.logoutButton} className="logout-button">
             Cerrar Sesión
           </button>
         </div>
@@ -389,13 +390,13 @@ const DashboardPage: React.FC = () => {
                 <div style={styles.activePatientHeader}>
                   <h2>🏥 Paciente Actualmente en Atención</h2>
                   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <button onClick={() => setShowCreateOrderModal(true)} style={styles.createOrderButton}>
+                    <button onClick={() => setShowCreateOrderModal(true)} style={styles.createOrderButton} className="create-order-button">
                       🛒 Crear Orden
                     </button>
-                    <button onClick={() => setShowLimitsConfigurator(true)} style={styles.configureLimitsButton}>
+                    <button onClick={() => setShowLimitsConfigurator(true)} style={styles.configureLimitsButton} className="configure-limits-button">
                       ⚙️ Configurar Límites
                     </button>
-                    <button onClick={handleEndCare} style={styles.endCareButton}>
+                    <button onClick={handleEndCare} style={styles.endCareButton} className="end-care-button">
                       Finalizar Atención
                     </button>
                   </div>
@@ -444,7 +445,7 @@ const DashboardPage: React.FC = () => {
                   gap: isMobile ? '15px' : '20px'
                 }}>
                   {devices.map((device) => (
-                    <div key={device.id} style={styles.deviceCard}>
+                    <div key={device.id} style={styles.deviceCard} className="device-card">
                       <div style={styles.deviceIcon}>📱</div>
                       <h3>{device.device_uid}</h3>
                       <p style={styles.deviceType}>{device.device_type_display}</p>
@@ -459,7 +460,7 @@ const DashboardPage: React.FC = () => {
                           <span style={styles.infoLabel}>Estado:</span>
                           <span style={{
                             ...styles.statusBadge,
-                            backgroundColor: device.is_active ? '#27ae60' : '#95a5a6'
+                            backgroundColor: device.is_active ? colors.success : colors.textSecondary
                           }}>
                             {device.is_active ? 'Activo' : 'Inactivo'}
                           </span>
@@ -479,17 +480,17 @@ const DashboardPage: React.FC = () => {
                 gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
                 gap: isMobile ? '15px' : '20px'
               }}>
-                <div style={styles.statCard}>
+                <div style={styles.statCard} className="stat-card">
                   <div style={styles.statIcon}>📋</div>
                   <div style={styles.statValue}>{stats.activeOrders}</div>
                   <div style={styles.statLabel}>Órdenes Activas</div>
                 </div>
-                <div style={styles.statCard}>
+                <div style={styles.statCard} className="stat-card">
                   <div style={styles.statIcon}>✅</div>
                   <div style={styles.statValue}>{stats.readyOrders}</div>
                   <div style={styles.statLabel}>Listas para Entrega</div>
                 </div>
-                <div style={styles.statCard}>
+                <div style={styles.statCard} className="stat-card">
                   <div style={styles.statIcon}>📊</div>
                   <div style={styles.statValue}>{stats.todayOrders}</div>
                   <div style={styles.statLabel}>Órdenes de Hoy</div>
@@ -505,20 +506,20 @@ const DashboardPage: React.FC = () => {
                 gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(250px, 1fr))',
                 gap: isMobile ? '15px' : '20px'
               }}>
-                <Link to="/staff/orders" style={styles.actionCard}>
-                  <div style={{...styles.actionIcon, backgroundColor: '#3498db'}}>📦</div>
+                <Link to="/staff/orders" style={styles.actionCard} className="action-card">
+                  <div style={{...styles.actionIcon, backgroundColor: colors.primary}}>📦</div>
                   <h3>Ver Órdenes</h3>
                   <p>Ver y gestionar todas las órdenes de tus habitaciones asignadas</p>
                 </Link>
 
-                <Link to="/staff/inventory" style={styles.actionCard}>
-                  <div style={{...styles.actionIcon, backgroundColor: '#9b59b6'}}>📊</div>
+                <Link to="/staff/inventory" style={styles.actionCard} className="action-card">
+                  <div style={{...styles.actionIcon, backgroundColor: colors.primaryDark}}>📊</div>
                   <h3>Ver Inventario</h3>
                   <p>Consultar niveles de stock actuales de todos los productos</p>
                 </Link>
 
-                <button onClick={() => setShowPatientModal(true)} style={styles.actionCardButton}>
-                  <div style={{...styles.actionIcon, backgroundColor: '#2ecc71'}}>👤</div>
+                <button onClick={() => setShowPatientModal(true)} style={styles.actionCardButton} className="action-card-button">
+                  <div style={{...styles.actionIcon, backgroundColor: colors.primary}}>👤</div>
                   <h3>Registrar Paciente</h3>
                   <p>Agregar un nuevo paciente al sistema</p>
                 </button>
@@ -573,7 +574,7 @@ const DashboardPage: React.FC = () => {
                 <button type="button" onClick={() => setShowPatientModal(false)} style={styles.cancelButton}>
                   Cancelar
                 </button>
-                <button type="submit" style={styles.submitButton}>
+                <button type="submit" style={styles.submitButton} className="submit-button">
                   Registrar Paciente
                 </button>
               </div>
@@ -588,9 +589,9 @@ const DashboardPage: React.FC = () => {
           <div style={styles.confirmModalContent}>
             <div style={{
               ...styles.modalHeader,
-              backgroundColor: confirmModal.type === 'success' ? '#27ae60' :
-                               confirmModal.type === 'error' ? '#e74c3c' :
-                               confirmModal.type === 'warning' ? '#f39c12' : '#3498db'
+              backgroundColor: confirmModal.type === 'success' ? colors.success :
+                               confirmModal.type === 'error' ? colors.error :
+                               confirmModal.type === 'warning' ? colors.warning : colors.primary
             }}>
               <h2 style={{ margin: 0, fontSize: '20px' }}>
                 {confirmModal.type === 'success' && '✓ '}
@@ -617,12 +618,13 @@ const DashboardPage: React.FC = () => {
                       closeModal();
                     }}
                     style={styles.modalConfirmButton}
+                    className="modal-confirm-button"
                   >
                     Confirmar
                   </button>
                 </>
               ) : (
-                <button onClick={closeModal} style={styles.modalOkButton}>
+                <button onClick={closeModal} style={styles.modalOkButton} className="modal-ok-button">
                   OK
                 </button>
               )}
@@ -660,15 +662,17 @@ const DashboardPage: React.FC = () => {
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.ivory,
   },
   header: {
-    backgroundColor: '#2c3e50',
-    color: 'white',
+    backgroundColor: colors.white,
+    color: colors.textPrimary,
     padding: '20px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    boxShadow: colors.shadowGold,
+    borderBottom: `2px solid ${colors.primaryMuted}`,
   },
   userInfo: {
     fontSize: '14px',
@@ -698,7 +702,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     position: 'absolute',
     top: '2px',
     right: '2px',
-    backgroundColor: '#e74c3c',
+    backgroundColor: colors.error,
     color: 'white',
     borderRadius: '50%',
     width: '20px',
@@ -789,11 +793,13 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   logoutButton: {
     padding: '10px 20px',
-    backgroundColor: '#e74c3c',
+    backgroundColor: colors.error,
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
+    fontWeight: '600',
+    transition: 'all 0.2s',
   },
   content: {
     padding: '20px',
@@ -808,10 +814,11 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   activePatientSection: {
     marginBottom: '30px',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: colors.cream,
     padding: '20px',
-    borderRadius: '8px',
-    border: '2px solid #4caf50',
+    borderRadius: '12px',
+    border: `2px solid ${colors.primary}`,
+    boxShadow: colors.shadowGold,
   },
   activePatientHeader: {
     display: 'flex',
@@ -821,20 +828,22 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   endCareButton: {
     padding: '10px 20px',
-    backgroundColor: '#e74c3c',
+    backgroundColor: colors.error,
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: 'bold',
+    transition: 'all 0.2s',
   },
   activePatientCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
     padding: '20px',
-    borderRadius: '8px',
+    borderRadius: '12px',
     display: 'flex',
     gap: '20px',
     alignItems: 'flex-start',
+    boxShadow: `0 2px 8px ${colors.shadow}`,
   },
   patientIcon: {
     fontSize: '64px',
@@ -874,11 +883,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: '15px',
   },
   deviceCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
     padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    borderRadius: '12px',
+    boxShadow: colors.shadowGold,
     textAlign: 'center',
+    border: `1px solid ${colors.primaryMuted}`,
+    transition: 'transform 0.2s, box-shadow 0.2s',
   },
   deviceIcon: {
     fontSize: '48px',
@@ -910,8 +921,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#2c3e50',
   },
   statusBadge: {
-    padding: '4px 12px',
-    borderRadius: '12px',
+    padding: '6px 14px',
+    borderRadius: '16px',
     color: 'white',
     fontSize: '12px',
     fontWeight: 'bold',
@@ -926,21 +937,23 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: '15px',
   },
   statCard: {
-    backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    backgroundColor: colors.white,
+    padding: '24px',
+    borderRadius: '12px',
+    boxShadow: colors.shadowGold,
     textAlign: 'center',
+    border: `1px solid ${colors.primaryMuted}`,
+    transition: 'transform 0.2s',
   },
   statIcon: {
     fontSize: '32px',
     marginBottom: '10px',
   },
   statValue: {
-    fontSize: '32px',
+    fontSize: '36px',
     fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: '5px',
+    color: colors.primary,
+    marginBottom: '8px',
   },
   statLabel: {
     fontSize: '14px',
@@ -956,10 +969,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: '15px',
   },
   actionCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
     padding: '30px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    borderRadius: '12px',
+    boxShadow: colors.shadowGold,
     textDecoration: 'none',
     color: 'inherit',
     display: 'flex',
@@ -967,20 +980,21 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     textAlign: 'center',
     cursor: 'pointer',
-    transition: 'transform 0.2s',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    border: `1px solid ${colors.primaryMuted}`,
   },
   actionCardButton: {
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
     padding: '30px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    border: 'none',
+    borderRadius: '12px',
+    boxShadow: colors.shadowGold,
+    border: `1px solid ${colors.primaryMuted}`,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
     cursor: 'pointer',
-    transition: 'transform 0.2s',
+    transition: 'transform 0.2s, box-shadow 0.2s',
   },
   actionIcon: {
     width: '60px',
@@ -1049,12 +1063,13 @@ const styles: { [key: string]: React.CSSProperties } = {
   submitButton: {
     flex: 1,
     padding: '12px',
-    backgroundColor: '#27ae60',
+    backgroundColor: colors.primary,
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: 'bold',
+    transition: 'all 0.2s',
   },
   confirmModalContent: {
     backgroundColor: 'white',
@@ -1081,13 +1096,14 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   modalOkButton: {
     padding: '10px 30px',
-    backgroundColor: '#3498db',
+    backgroundColor: colors.primary,
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: '600',
+    transition: 'all 0.2s',
   },
   modalCancelButton: {
     padding: '10px 30px',
@@ -1100,36 +1116,80 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   modalConfirmButton: {
     padding: '10px 30px',
-    backgroundColor: '#27ae60',
+    backgroundColor: colors.primary,
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: '600',
+    transition: 'all 0.2s',
   },
   configureLimitsButton: {
     padding: '12px 24px',
-    backgroundColor: '#ff9800',
-    color: '#fff',
+    backgroundColor: colors.primary,
+    color: colors.white,
     border: 'none',
     borderRadius: '8px',
     fontSize: '14px',
     fontWeight: 'bold',
     cursor: 'pointer',
-    transition: 'background-color 0.3s',
+    transition: 'all 0.2s',
   },
   createOrderButton: {
     padding: '12px 24px',
-    backgroundColor: '#4caf50',
-    color: '#fff',
+    backgroundColor: colors.primary,
+    color: colors.white,
     border: 'none',
     borderRadius: '8px',
     fontSize: '14px',
     fontWeight: 'bold',
     cursor: 'pointer',
-    transition: 'background-color 0.3s',
+    transition: 'all 0.2s',
   },
 };
+
+// Add hover effects
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  .device-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px ${colors.shadowGold} !important;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px ${colors.shadowGold} !important;
+  }
+  
+  .action-card:hover, .action-card-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px ${colors.shadowGold} !important;
+  }
+  
+  .logout-button:hover {
+    background-color: ${colors.error} !important;
+    transform: scale(1.05);
+  }
+  
+  .create-order-button:hover, .configure-limits-button:hover {
+    background-color: ${colors.primaryDark} !important;
+    transform: scale(1.02);
+  }
+  
+  .end-care-button:hover {
+    background-color: ${colors.error} !important;
+    transform: scale(1.02);
+  }
+  
+  .submit-button:hover, .modal-confirm-button:hover, .modal-ok-button:hover {
+    background-color: ${colors.primaryDark} !important;
+    transform: scale(1.02);
+  }
+`;
+if (!document.head.querySelector('[data-staff-dashboard-styles]')) {
+  styleSheet.setAttribute('data-staff-dashboard-styles', 'true');
+  document.head.appendChild(styleSheet);
+}
 
 export default DashboardPage;

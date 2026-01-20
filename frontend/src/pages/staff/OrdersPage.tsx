@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ordersApi } from '../../api/orders';
 import { useAuth } from '../../auth/AuthContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { colors } from '../../styles/colors';
 
 const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
 
@@ -77,17 +78,17 @@ const OrdersPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PLACED':
-        return '#e74c3c';
+        return colors.orderPlaced;
       case 'PREPARING':
-        return '#f39c12';
+        return colors.orderPreparing;
       case 'READY':
-        return '#3498db';
+        return colors.orderReady;
       case 'DELIVERED':
-        return '#27ae60';
+        return colors.orderDelivered;
       case 'CANCELLED':
-        return '#95a5a6';
+        return colors.orderCancelled;
       default:
-        return '#95a5a6';
+        return colors.orderCancelled;
     }
   };
 
@@ -104,7 +105,7 @@ const OrdersPage: React.FC = () => {
           <h1 style={{fontSize: isMobile ? '20px' : '28px', margin: 0}}>Panel de Órdenes</h1>
           <div style={{...styles.userInfo, fontSize: isMobile ? '12px' : '14px'}}>
             {user?.email} |
-            <span style={{ marginLeft: '10px', color: isConnected ? '#27ae60' : '#e74c3c' }}>
+            <span style={{ marginLeft: '10px', color: isConnected ? colors.success : colors.error }}>
               {isConnected ? '● Conectado' : '○ Desconectado'}
             </span>
           </div>
@@ -120,14 +121,14 @@ const OrdersPage: React.FC = () => {
             width: isMobile ? '100%' : 'auto',
             textAlign: 'center' as const,
             padding: isMobile ? '12px' : '10px 20px'
-          }}>
+          }} className="back-button">
             ← Volver al Panel
           </Link>
           <button onClick={handleLogout} style={{
             ...styles.logoutButton,
             width: isMobile ? '100%' : 'auto',
             padding: isMobile ? '12px' : '10px 20px'
-          }}>
+          }} className="logout-button">
             Cerrar Sesión
           </button>
         </div>
@@ -142,24 +143,28 @@ const OrdersPage: React.FC = () => {
         <button
           onClick={() => setFilter('PLACED,PREPARING')}
           style={filter === 'PLACED,PREPARING' ? styles.filterButtonActive : styles.filterButton}
+          className="filter-button"
         >
           Órdenes Activas
         </button>
         <button
           onClick={() => setFilter('READY')}
           style={filter === 'READY' ? styles.filterButtonActive : styles.filterButton}
+          className="filter-button"
         >
           Listas
         </button>
         <button
           onClick={() => setFilter('DELIVERED')}
           style={filter === 'DELIVERED' ? styles.filterButtonActive : styles.filterButton}
+          className="filter-button"
         >
           Entregadas
         </button>
         <button
           onClick={() => setFilter('PLACED,PREPARING,READY,DELIVERED,CANCELLED')}
           style={filter === 'PLACED,PREPARING,READY,DELIVERED,CANCELLED' ? styles.filterButtonActive : styles.filterButton}
+          className="filter-button"
         >
           Todas
         </button>
@@ -182,6 +187,7 @@ const OrdersPage: React.FC = () => {
                 key={order.id}
                 to={`/staff/orders/${order.id}`}
                 style={styles.orderCard}
+                className="order-card"
               >
                 <div style={styles.orderHeader}>
                   <h3>Orden #{order.id}</h3>
@@ -197,7 +203,7 @@ const OrdersPage: React.FC = () => {
                 <div style={styles.orderInfo}>
                   <p>Habitación: {order.room_code || 'N/A'}</p>
                   <p>Dispositivo: {order.device_uid || 'N/A'}</p>
-                  <p>Items: {order.items.length}</p>
+                  <p>Artículos: {order.items.length}</p>
                   <p style={styles.timestamp}>
                     {new Date(order.placed_at).toLocaleString()}
                   </p>
@@ -214,15 +220,17 @@ const OrdersPage: React.FC = () => {
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.ivory,
   },
   header: {
-    backgroundColor: '#2c3e50',
-    color: 'white',
+    backgroundColor: colors.white,
+    color: colors.textPrimary,
     padding: '20px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    boxShadow: colors.shadowGold,
+    borderBottom: `2px solid ${colors.primaryMuted}`,
   },
   userInfo: {
     fontSize: '14px',
@@ -236,44 +244,51 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   backButton: {
     padding: '10px 20px',
-    backgroundColor: '#34495e',
+    backgroundColor: colors.primaryDark,
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
     textDecoration: 'none',
     fontSize: '14px',
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s',
+    fontWeight: '600',
   },
   logoutButton: {
     padding: '10px 20px',
-    backgroundColor: '#e74c3c',
+    backgroundColor: colors.error,
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
+    fontWeight: '600',
+    transition: 'all 0.2s',
   },
   filters: {
     display: 'flex',
     gap: '10px',
     padding: '20px',
-    backgroundColor: 'white',
-    borderBottom: '1px solid #ddd',
+    backgroundColor: colors.white,
+    borderBottom: `1px solid ${colors.primaryMuted}`,
   },
   filterButton: {
     padding: '10px 20px',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    backgroundColor: 'white',
+    border: `1px solid ${colors.primaryMuted}`,
+    borderRadius: '8px',
+    backgroundColor: colors.white,
+    color: colors.textPrimary,
     cursor: 'pointer',
+    transition: 'all 0.2s',
+    fontWeight: '500',
   },
   filterButtonActive: {
     padding: '10px 20px',
-    border: '1px solid #3498db',
-    borderRadius: '5px',
-    backgroundColor: '#3498db',
+    border: `2px solid ${colors.primary}`,
+    borderRadius: '8px',
+    backgroundColor: colors.primary,
     color: 'white',
     cursor: 'pointer',
+    fontWeight: '600',
   },
   loading: {
     textAlign: 'center',
@@ -294,14 +309,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '20px',
   },
   orderCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.white,
     padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    borderRadius: '12px',
+    boxShadow: colors.shadowGold,
     textDecoration: 'none',
     color: 'inherit',
-    transition: 'transform 0.2s',
+    transition: 'transform 0.2s, box-shadow 0.2s',
     cursor: 'pointer',
+    border: `1px solid ${colors.primaryMuted}`,
   },
   orderHeader: {
     display: 'flex',
@@ -326,5 +342,33 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: '10px',
   },
 };
+
+// Add hover effects
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  .order-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px ${colors.shadowGold} !important;
+  }
+  
+  .back-button:hover {
+    background-color: ${colors.primary} !important;
+    transform: scale(1.02);
+  }
+  
+  .logout-button:hover {
+    background-color: ${colors.error} !important;
+    transform: scale(1.02);
+  }
+  
+  .filter-button:hover {
+    border-color: ${colors.primary} !important;
+    color: ${colors.primary} !important;
+  }
+`;
+if (!document.head.querySelector('[data-staff-orders-styles]')) {
+  styleSheet.setAttribute('data-staff-orders-styles', 'true');
+  document.head.appendChild(styleSheet);
+}
 
 export default OrdersPage;
