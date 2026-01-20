@@ -96,17 +96,25 @@ const FeedbackPage: React.FC = () => {
             </div>
             <div style={styles.statCard}>
               <div style={styles.statIcon}>⭐</div>
-              <div style={styles.statValue}>{stats.average_rating.toFixed(1)}/5</div>
+              <div style={styles.statValue}>
+                {stats.average_rating && typeof stats.average_rating === 'number' 
+                  ? stats.average_rating.toFixed(1) 
+                  : '0.0'}/5
+              </div>
               <div style={styles.statLabel}>Calificación Promedio</div>
             </div>
             <div style={styles.statCard}>
               <div style={styles.statIcon}>📅</div>
-              <div style={styles.statValue}>{stats.today_feedbacks}</div>
+              <div style={styles.statValue}>{stats.today_feedbacks || 0}</div>
               <div style={styles.statLabel}>Retroalimentaciones de Hoy</div>
             </div>
             <div style={styles.statCard}>
               <div style={styles.statIcon}>📈</div>
-              <div style={styles.statValue}>{stats.response_rate.toFixed(1)}%</div>
+              <div style={styles.statValue}>
+                {stats.response_rate && typeof stats.response_rate === 'number' 
+                  ? stats.response_rate.toFixed(1) 
+                  : '0.0'}%
+              </div>
               <div style={styles.statLabel}>Tasa de Respuesta</div>
             </div>
           </div>
@@ -173,12 +181,13 @@ const FeedbackPage: React.FC = () => {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th style={styles.th}>ID de Orden</th>
+                    <th style={styles.th}>ID de Asignación</th>
                     <th style={styles.th}>Fecha</th>
                     <th style={styles.th}>Paciente</th>
                     <th style={styles.th}>Enfermera/Personal</th>
                     <th style={styles.th}>Habitación</th>
-                    <th style={styles.th}>Calificación</th>
+                    <th style={styles.th}>Calificación Personal</th>
+                    <th style={styles.th}>Calificación Estancia</th>
                     <th style={styles.th}>Comentario</th>
                     <th style={styles.th}>Acciones</th>
                   </tr>
@@ -186,14 +195,15 @@ const FeedbackPage: React.FC = () => {
                 <tbody>
                   {feedbacks.map((feedback) => (
                     <tr key={feedback.id} style={styles.tr}>
-                      <td style={styles.td}>#{feedback.order_id}</td>
+                      <td style={styles.td}>#{feedback.patient_assignment_id || feedback.patient_assignment || 'N/A'}</td>
                       <td style={styles.td}>
                         {new Date(feedback.created_at).toLocaleDateString()}
                       </td>
                       <td style={styles.td}>{feedback.patient_name || 'N/A'}</td>
                       <td style={styles.td}>{feedback.staff_name || 'N/A'}</td>
-                      <td style={styles.td}>{feedback.room_code}</td>
-                      <td style={styles.td}>{renderStars(feedback.satisfaction_rating)}</td>
+                      <td style={styles.td}>{feedback.room_code || 'N/A'}</td>
+                      <td style={styles.td}>{renderStars(feedback.staff_rating || 0)}</td>
+                      <td style={styles.td}>{renderStars(feedback.stay_rating || 0)}</td>
                       <td style={styles.td}>
                         {feedback.comment ? (
                           <span style={styles.hasComment}>💬</span>
@@ -206,7 +216,7 @@ const FeedbackPage: React.FC = () => {
                           onClick={() => handleViewDetail(feedback)}
                           style={styles.viewButton}
                         >
-                          View
+                          Ver
                         </button>
                       </td>
                     </tr>
@@ -222,40 +232,63 @@ const FeedbackPage: React.FC = () => {
       {showDetailModal && selectedFeedback && (
         <div style={styles.modalOverlay} onClick={() => setShowDetailModal(false)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h2 style={styles.modalTitle}>Feedback Details</h2>
+            <h2 style={styles.modalTitle}>Detalles de Retroalimentación</h2>
 
             <div style={styles.detailSection}>
               <div style={styles.detailRow}>
-                <strong>Order ID:</strong> #{selectedFeedback.order_id}
+                <strong>ID de Asignación:</strong> #{selectedFeedback.patient_assignment_id || selectedFeedback.patient_assignment || 'N/A'}
               </div>
               <div style={styles.detailRow}>
-                <strong>Date:</strong> {new Date(selectedFeedback.created_at).toLocaleString()}
+                <strong>Fecha:</strong> {new Date(selectedFeedback.created_at).toLocaleString()}
               </div>
               <div style={styles.detailRow}>
-                <strong>Patient:</strong> {selectedFeedback.patient_name || 'N/A'}
+                <strong>Paciente:</strong> {selectedFeedback.patient_name || 'N/A'}
               </div>
               <div style={styles.detailRow}>
-                <strong>Nurse/Staff:</strong> {selectedFeedback.staff_name || 'N/A'}
+                <strong>Enfermera/Personal:</strong> {selectedFeedback.staff_name || 'N/A'}
               </div>
               {selectedFeedback.staff_email && (
                 <div style={styles.detailRow}>
-                  <strong>Staff Email:</strong> {selectedFeedback.staff_email}
+                  <strong>Correo del Personal:</strong> {selectedFeedback.staff_email}
                 </div>
               )}
               <div style={styles.detailRow}>
-                <strong>Room:</strong> {selectedFeedback.room_code}
+                <strong>Habitación:</strong> {selectedFeedback.room_code || 'N/A'}
               </div>
               <div style={styles.detailRow}>
-                <strong>Rating:</strong> {renderStars(selectedFeedback.satisfaction_rating)}
+                <strong>Calificación del Personal:</strong> {renderStars(selectedFeedback.staff_rating || 0)}
                 <span style={{ marginLeft: '10px', fontSize: '18px', fontWeight: 'bold' }}>
-                  {selectedFeedback.satisfaction_rating}/5
+                  {selectedFeedback.staff_rating || 0}/5
                 </span>
               </div>
+              <div style={styles.detailRow}>
+                <strong>Calificación de Estancia:</strong> {renderStars(selectedFeedback.stay_rating || 0)}
+                <span style={{ marginLeft: '10px', fontSize: '18px', fontWeight: 'bold' }}>
+                  {selectedFeedback.stay_rating || 0}/5
+                </span>
+              </div>
+              {selectedFeedback.product_ratings && Object.keys(selectedFeedback.product_ratings).length > 0 && (
+                <div style={styles.detailRow}>
+                  <strong>Calificaciones de Productos:</strong>
+                  <div style={{ marginTop: '10px', paddingLeft: '20px' }}>
+                    {Object.entries(selectedFeedback.product_ratings).map(([orderId, products]: [string, any]) => (
+                      <div key={orderId} style={{ marginBottom: '10px' }}>
+                        <strong>Orden #{orderId}:</strong>
+                        {Object.entries(products).map(([productId, rating]: [string, any]) => (
+                          <div key={productId} style={{ marginLeft: '20px', fontSize: '14px' }}>
+                            Producto #{productId}: {renderStars(rating)} ({rating}/5)
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {selectedFeedback.comment && (
               <div style={styles.commentSection}>
-                <strong>Comment:</strong>
+                <strong>Comentario:</strong>
                 <div style={styles.commentBox}>{selectedFeedback.comment}</div>
               </div>
             )}
@@ -264,7 +297,7 @@ const FeedbackPage: React.FC = () => {
               style={styles.closeButton}
               onClick={() => setShowDetailModal(false)}
             >
-              Close
+              Cerrar
             </button>
           </div>
         </div>

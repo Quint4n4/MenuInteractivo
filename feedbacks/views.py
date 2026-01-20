@@ -254,6 +254,15 @@ class FeedbackManagementViewSet(viewsets.ReadOnlyModelViewSet):
         # Average staff and stay ratings
         avg_staff_rating = feedbacks.aggregate(avg=Avg('staff_rating'))['avg'] or 0
         avg_stay_rating = feedbacks.aggregate(avg=Avg('stay_rating'))['avg'] or 0
+        # Calculate overall average (average of staff and stay ratings)
+        if avg_staff_rating and avg_stay_rating:
+            average_rating = (avg_staff_rating + avg_stay_rating) / 2
+        elif avg_staff_rating:
+            average_rating = avg_staff_rating
+        elif avg_stay_rating:
+            average_rating = avg_stay_rating
+        else:
+            average_rating = 0
 
         # Today's feedbacks
         today = timezone.now().date()
@@ -294,6 +303,7 @@ class FeedbackManagementViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response({
             'total_feedbacks': total_feedbacks,
+            'average_rating': round(average_rating, 2),  # Overall average for compatibility
             'average_staff_rating': round(avg_staff_rating, 2),
             'average_stay_rating': round(avg_stay_rating, 2),
             'today_feedbacks': today_feedbacks,
