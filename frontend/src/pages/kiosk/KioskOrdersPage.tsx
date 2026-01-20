@@ -136,13 +136,33 @@ export const KioskOrdersPage: React.FC = () => {
     loadData();
   }, [deviceId]);
 
+  // Block back navigation when waiting for survey
+  useEffect(() => {
+    if (showWaitingForSurveyModal) {
+      // Push current state to prevent back navigation
+      window.history.pushState(null, '', window.location.href);
+      
+      const handlePopState = (event: PopStateEvent) => {
+        // Prevent back navigation - stay on current page and keep modal open
+        window.history.pushState(null, '', window.location.href);
+        setShowWaitingForSurveyModal(true);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [showWaitingForSurveyModal]);
+
   // Intercept back navigation when there are active orders
   useEffect(() => {
     const hasActiveOrders = activeOrders.some(
       (order) => ['PLACED', 'PREPARING', 'READY'].includes(order.status)
     );
 
-    if (hasActiveOrders) {
+    if (hasActiveOrders && !showWaitingForSurveyModal) {
       const handlePopState = (e: PopStateEvent) => {
         e.preventDefault();
         // Prevent going back to menu if there are active orders
@@ -423,7 +443,7 @@ export const KioskOrdersPage: React.FC = () => {
         <WaitingForSurveyModal
           onReturnToMenu={() => {
             setShowWaitingForSurveyModal(false);
-            navigate(`/kiosk/${deviceId}/home`);
+            navigate(`/kiosk/${deviceId}`, { replace: true });
           }}
         />
       )}

@@ -404,9 +404,13 @@ def get_active_patient_by_device(request, device_uid):
                 'full_name': assignment.staff.full_name,
                 'email': assignment.staff.email,
             },
+            'id': assignment.id,
             'assignment_id': assignment.id,
             'started_at': assignment.started_at.isoformat(),
-            'order_limits': assignment.order_limits or {}
+            'order_limits': assignment.order_limits or {},
+            'survey_enabled': assignment.survey_enabled,
+            'survey_enabled_at': assignment.survey_enabled_at.isoformat() if assignment.survey_enabled_at else None,
+            'can_patient_order': assignment.can_patient_order,
         }, status=status.HTTP_200_OK)
 
     except Device.DoesNotExist:

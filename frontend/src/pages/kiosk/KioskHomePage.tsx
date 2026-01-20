@@ -333,8 +333,12 @@ export const KioskHomePage: React.FC = () => {
       setPatientInfo(prev => prev ? { ...prev, can_patient_order: message.can_patient_order ?? true } : null);
     } else if (message.type === 'survey_enabled') {
       console.log('Survey enabled - blocking patient orders');
-      // When survey is enabled, block patient orders
+      // When survey is enabled, block patient orders and redirect to orders page to show survey
       setPatientInfo(prev => prev ? { ...prev, can_patient_order: false, survey_enabled: true } : null);
+      // Redirect to orders page to show the survey modal
+      if (deviceId) {
+        navigate(`/kiosk/${deviceId}/orders`, { replace: true });
+      }
     } else if (message.type === 'session_ended') {
       console.log('Patient session ended by staff - returning to welcome screen');
       // Reset all state to show initial welcome screen
