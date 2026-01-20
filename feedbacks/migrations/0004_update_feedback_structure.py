@@ -45,10 +45,7 @@ class Migration(migrations.Migration):
             model_name='feedback',
             name='satisfaction_rating',
         ),
-        # Finally, make patient_assignment required (non-null)
-        migrations.AlterField(
-            model_name='feedback',
-            name='patient_assignment',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='feedbacks', to='clinic.patientassignment', verbose_name='patient assignment'),
-        ),
+        # Note: patient_assignment is kept as nullable to allow old feedbacks without assignment
+        # New feedbacks should always have a patient_assignment, but we don't enforce it at DB level
+        # to preserve existing data
     ]

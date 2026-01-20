@@ -15,6 +15,8 @@ class Feedback(models.Model):
         PatientAssignment,
         on_delete=models.CASCADE,
         related_name='feedbacks',
+        null=True,
+        blank=True,
         verbose_name=_('patient assignment'),
         help_text=_('The patient assignment this feedback is for')
     )
