@@ -54,6 +54,7 @@ const DashboardPage: React.FC = () => {
         console.log('🔔 New order notification:', message.order_id);
         addNotification(message.order_id);
         playNotificationSound();
+        sendBrowserNotification(message.order_id);
         // Reload stats to show updated numbers
         loadData();
       } else if (message.type === 'order_updated') {
@@ -109,26 +110,127 @@ const DashboardPage: React.FC = () => {
     setActiveNotifications(prev => prev.filter(n => n.orderId !== orderId));
   };
 
-  const playNotificationSound = () => {
-    // Create a simple beep sound using Web Audio API
+  // Estado para AudioContext (necesario para iOS/Safari)
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
+
+  // Inicializar AudioContext cuando el usuario interactúa por primera vez
+  const initializeAudio = () => {
+    if (!audioContext) {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        setAudioContext(ctx);
+        setSoundEnabled(true);
+        // Intentar reproducir un sonido corto para "activar" el audio en iOS
+        playTestSound(ctx);
+        return true;
+      } catch (error) {
+        console.error('Failed to initialize audio:', error);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Sonido de prueba para activar audio en iOS
+  const playTestSound = (ctx?: AudioContext) => {
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      const context = ctx || audioContext;
+      if (!context) return;
+
+      // Resumir el contexto si está suspendido (requerido en iOS)
+      if (context.state === 'suspended') {
+        context.resume().then(() => {
+          playBeepSound(context);
+        });
+      } else {
+        playBeepSound(context);
+      }
+    } catch (error) {
+      console.error('Failed to play test sound:', error);
+    }
+  };
+
+  // Función para reproducir sonido beep
+  const playBeepSound = (ctx: AudioContext) => {
+    try {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
 
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(ctx.destination);
 
       oscillator.frequency.value = 800; // Frequency in Hz
       oscillator.type = 'sine';
 
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
 
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.5);
+    } catch (error) {
+      console.error('Failed to play beep sound:', error);
+    }
+  };
+
+  const playNotificationSound = () => {
+    if (!soundEnabled || !audioContext) {
+      // Si no está habilitado, intentar inicializar y reproducir
+      if (initializeAudio()) {
+        // Esperar un poco y reproducir
+        setTimeout(() => playTestSound(), 100);
+      }
+      return;
+    }
+
+    try {
+      // Resumir el contexto si está suspendido (requerido en iOS/Safari)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          playBeepSound(audioContext);
+        }).catch((error) => {
+          console.error('Failed to resume audio context:', error);
+        });
+      } else {
+        playBeepSound(audioContext);
+      }
     } catch (error) {
       console.error('Failed to play notification sound:', error);
+    }
+  };
+
+  // Solicitar notificaciones del navegador al cargar
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Enviar notificación del navegador cuando llega una nueva orden
+  const sendBrowserNotification = (orderId: number) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        const notification = new Notification('Nueva Orden Recibida', {
+          body: `Orden #${orderId} ha sido recibida`,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: `order-${orderId}`,
+          requireInteraction: false,
+        });
+
+        // Cerrar la notificación después de 5 segundos
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+
+        // Click en notificación
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+      } catch (error) {
+        console.error('Failed to send browser notification:', error);
+      }
     }
   };
 
@@ -303,8 +405,31 @@ const DashboardPage: React.FC = () => {
         }}>
           {/* Notification Bell */}
           <div style={styles.notificationBellContainer}>
+            {!soundEnabled && (
+              <button
+                onClick={() => {
+                  initializeAudio();
+                  playNotificationSound();
+                }}
+                style={{
+                  ...styles.enableSoundButton,
+                  padding: isMobile ? '6px 10px' : '8px 12px',
+                  fontSize: isMobile ? '12px' : '14px',
+                  marginRight: '8px'
+                }}
+                title="Activar Sonidos"
+              >
+                🔊 Activar Sonidos
+              </button>
+            )}
             <button
-              onClick={() => setShowNotificationsDropdown(!showNotificationsDropdown)}
+              onClick={() => {
+                setShowNotificationsDropdown(!showNotificationsDropdown);
+                // Solicitar permisos de notificación si no están concedidos
+                if ('Notification' in window && Notification.permission === 'default') {
+                  Notification.requestPermission();
+                }
+              }}
               style={{
                 ...styles.notificationBell,
                 padding: isMobile ? '6px 10px' : '8px 12px',
@@ -686,6 +811,17 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   notificationBellContainer: {
     position: 'relative',
+  },
+  enableSoundButton: {
+    background: colors.primary,
+    border: 'none',
+    color: colors.white,
+    fontSize: '14px',
+    cursor: 'pointer',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    fontWeight: '600',
+    transition: 'all 0.2s',
   },
   notificationBell: {
     background: 'rgba(255,255,255,0.1)',

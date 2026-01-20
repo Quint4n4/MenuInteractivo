@@ -63,7 +63,7 @@ const OrderDetailPage: React.FC = () => {
       setSuccessModal({
         show: true,
         title: 'Estado Actualizado',
-        message: response.message,
+        message: translateMessage(response.message),
       });
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Error al actualizar el estado';
@@ -95,7 +95,7 @@ const OrderDetailPage: React.FC = () => {
           setSuccessModal({
             show: true,
             title: 'Orden Cancelada',
-            message: response.message,
+            message: translateMessage(response.message),
           });
         } catch (err: any) {
           const errorMsg = err.response?.data?.error || 'Error al cancelar la orden';
@@ -125,6 +125,28 @@ const OrderDetailPage: React.FC = () => {
       'CANCELLED': 'Cancelada',
     };
     return statusMap[status] || status;
+  };
+
+  const translateMessage = (message: string): string => {
+    // Traducir mensajes comunes del backend
+    if (message.includes('Order status changed from')) {
+      return message
+        .replace(/Order status changed from (\w+) to (\w+)/i, (match, from, to) => {
+          return `Estado de orden cambiado de ${translateStatus(from)} a ${translateStatus(to)}`;
+        })
+        .replace(/Order status changed/i, 'Estado de orden cambiado');
+    }
+    if (message.includes('Order cancelled')) {
+      return message.replace(/Order cancelled/i, 'Orden cancelada');
+    }
+    if (message.includes('Order created')) {
+      return message.replace(/Order created/i, 'Orden creada');
+    }
+    if (message.includes('Order placed')) {
+      return message.replace(/Order placed/i, 'Orden realizada');
+    }
+    // Si no coincide con ningún patrón, devolver el mensaje original
+    return message;
   };
 
   const getStatusColor = (status: string) => {
