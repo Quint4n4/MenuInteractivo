@@ -218,38 +218,83 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  // Solicitar notificaciones del navegador al cargar
+  // Registrar Service Worker y solicitar permisos de notificación
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    const registerServiceWorker = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register('/service-worker.js');
+          console.log('Service Worker registrado:', registration.scope);
+
+          // Solicitar permisos de notificación
+          if ('Notification' in window) {
+            if (Notification.permission === 'default') {
+              const permission = await Notification.requestPermission();
+              console.log('Permiso de notificación:', permission);
+            } else if (Notification.permission === 'granted') {
+              console.log('Permisos de notificación ya concedidos');
+            }
+          }
+        } catch (error) {
+          console.error('Error registrando Service Worker:', error);
+        }
+      }
+    };
+
+    registerServiceWorker();
   }, []);
 
-  // Enviar notificación del navegador cuando llega una nueva orden
-  const sendBrowserNotification = (orderId: number) => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      try {
+  // Enviar notificación usando Service Worker (funciona incluso con la página cerrada)
+  const sendBrowserNotification = async (orderId: number) => {
+    try {
+      // Intentar usar Service Worker primero (funciona incluso con página cerrada)
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        if (registration && Notification.permission === 'granted') {
+          // Enviar mensaje al Service Worker
+          registration.active?.postMessage({
+            type: 'NOTIFY',
+            orderId: orderId,
+            title: 'Nueva Orden Recibida',
+            body: `Orden #${orderId} ha sido recibida - ¡Revisa el panel de órdenes!`,
+          });
+          console.log('Notificación enviada al Service Worker');
+          return;
+        }
+      }
+
+      // Fallback: notificación directa si Service Worker no está disponible
+      if ('Notification' in window && Notification.permission === 'granted') {
         const notification = new Notification('Nueva Orden Recibida', {
-          body: `Orden #${orderId} ha sido recibida`,
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
+          body: `Orden #${orderId} ha sido recibida - ¡Revisa el panel de órdenes!`,
+          icon: '/vite.svg',
+          badge: '/vite.svg',
           tag: `order-${orderId}`,
           requireInteraction: false,
+          vibrate: [200, 100, 200], // Vibrar en dispositivos móviles
+          data: {
+            orderId: orderId,
+            url: '/staff/orders',
+          },
         });
 
-        // Cerrar la notificación después de 5 segundos
-        setTimeout(() => {
-          notification.close();
-        }, 5000);
-
         // Click en notificación
-        notification.onclick = () => {
+        notification.onclick = (event) => {
+          event.preventDefault();
           window.focus();
+          if (notification.data?.url) {
+            window.location.href = notification.data.url;
+          }
           notification.close();
         };
-      } catch (error) {
-        console.error('Failed to send browser notification:', error);
+
+        // Cerrar la notificación después de 8 segundos
+        setTimeout(() => {
+          notification.close();
+        }, 8000);
       }
+    } catch (error) {
+      console.error('Failed to send browser notification:', error);
     }
   };
 
@@ -426,10 +471,14 @@ const DashboardPage: React.FC = () => {
           <div style={styles.notificationBellContainer}>
             {!soundEnabled && (
               <button
-                onClick={() => {
+                onClick={async () => {
                   initializeAudio();
                   // Reproducir sonido de confirmación
                   setTimeout(() => playNotificationSound(), 200);
+                  // Solicitar permisos de notificación si no están concedidos
+                  if ('Notification' in window && Notification.permission === 'default') {
+                    await Notification.requestPermission();
+                  }
                 }}
                 style={{
                   ...styles.enableSoundButton,
@@ -437,9 +486,9 @@ const DashboardPage: React.FC = () => {
                   fontSize: isMobile ? '12px' : '14px',
                   marginRight: '8px'
                 }}
-                title="Activar Sonidos - Se reproducirán cuando lleguen nuevas órdenes"
+                title="Activar Sonidos y Notificaciones - Recibirás alertas incluso con el iPad apagado"
               >
-                🔊 Activar Sonidos
+                🔔 Activar Notificaciones
               </button>
             )}
             <button
