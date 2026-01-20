@@ -202,9 +202,11 @@ const NewAdminDashboardPage: React.FC = () => {
                 <div style={styles.sectionTitle}>Mejor Personal</div>
                 {stats.satisfaction.top_staff.map((staff: any, index: number) => (
                   <div key={index} style={styles.staffItem}>
-                    <span>{staff.staff__full_name}</span>
+                    <span>{staff.staff__full_name || 'N/A'}</span>
                     <span style={styles.staffRating}>
-                      {staff.avg_rating?.toFixed(1)} ⭐ ({staff.count})
+                      {staff.avg_rating && typeof staff.avg_rating === 'number' 
+                        ? staff.avg_rating.toFixed(1) 
+                        : '0.0'} ⭐ ({staff.count || 0})
                     </span>
                   </div>
                 ))}
