@@ -8,6 +8,7 @@ import { ProductCard } from '../../components/kiosk/ProductCard';
 import { CartModal } from '../../components/kiosk/CartModal';
 import { AddToCartNotification } from '../../components/kiosk/AddToCartNotification';
 import { LimitReachedModal } from '../../components/kiosk/LimitReachedModal';
+import CannotOrderModal from '../../components/kiosk/CannotOrderModal';
 import { colors } from '../../styles/colors';
 
 // Storage key for cart persistence
@@ -33,6 +34,7 @@ export const KioskCategoryPage: React.FC = () => {
     room_code: string;
     staff_name: string;
     order_limits?: { DRINK?: number; SNACK?: number };
+    can_patient_order?: boolean;
   } | null>(null);
 
   // Initialize cart from location state or localStorage
@@ -70,6 +72,7 @@ export const KioskCategoryPage: React.FC = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [lastAddedProduct, setLastAddedProduct] = useState<string>('');
   const [showLimitReachedModal, setShowLimitReachedModal] = useState(false);
+  const [showCannotOrderModal, setShowCannotOrderModal] = useState(false);
 
   useEffect(() => {
     loadCategoryData();
@@ -106,6 +109,7 @@ export const KioskCategoryPage: React.FC = () => {
             room_code: patientData.room.code,
             staff_name: patientData.staff.full_name,
             order_limits: patientData.order_limits || {},
+            can_patient_order: patientData.can_patient_order !== false, // Default to true
           });
           setOrderLimits(patientData.order_limits || {});
         } catch (error) {
@@ -173,6 +177,12 @@ export const KioskCategoryPage: React.FC = () => {
   };
 
   const handleAddToCart = (productId: number) => {
+    // Check if patient can order
+    if (patientInfo && patientInfo.can_patient_order === false) {
+      setShowCannotOrderModal(true);
+      return;
+    }
+
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
@@ -389,6 +399,13 @@ export const KioskCategoryPage: React.FC = () => {
         nurseName={patientInfo?.staff_name}
         onClose={() => setShowLimitReachedModal(false)}
       />
+
+      {/* Cannot Order Modal */}
+      {showCannotOrderModal && (
+        <CannotOrderModal
+          onClose={() => setShowCannotOrderModal(false)}
+        />
+      )}
     </div>
   );
 };

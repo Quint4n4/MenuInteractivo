@@ -760,9 +760,11 @@ export const KioskHomePage: React.FC = () => {
       />
 
       {/* Cannot Order Modal */}
-      <CannotOrderModal
-        onClose={() => setShowCannotOrderModal(false)}
-      />
+      {showCannotOrderModal && (
+        <CannotOrderModal
+          onClose={() => setShowCannotOrderModal(false)}
+        />
+      )}
 
       {/* Survey Modals - Global Context */}
       {surveyState.showProductRatings && surveyState.patientAssignmentId && (
