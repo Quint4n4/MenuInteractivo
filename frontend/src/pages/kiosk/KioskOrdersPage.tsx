@@ -6,8 +6,11 @@ import { OrderStatusProgress } from '../../components/kiosk/OrderStatusProgress'
 import { SatisfactionModal } from '../../components/kiosk/SatisfactionModal';
 import { ThankYouModal } from '../../components/kiosk/ThankYouModal';
 import WaitingForSurveyModal from '../../components/kiosk/WaitingForSurveyModal';
-import CompleteSurveyModal from '../../components/kiosk/CompleteSurveyModal';
+import ProductRatingsModal from '../../components/kiosk/ProductRatingsModal';
+import StaffRatingModal from '../../components/kiosk/StaffRatingModal';
+import StayRatingModal from '../../components/kiosk/StayRatingModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { useSurvey } from '../../contexts/SurveyContext';
 import { useWindowSize } from '../../utils/responsive';
 import { colors } from '../../styles/colors';
 import logoHorizontal from '../../assets/logos/logo-horizontal.png';
@@ -54,7 +57,9 @@ export const KioskOrdersPage: React.FC = () => {
   }>({ show: false, orderId: null });
   const [showThankYouModal, setShowThankYouModal] = useState(false);
   const [showWaitingForSurveyModal, setShowWaitingForSurveyModal] = useState(false);
-  const [showCompleteSurveyModal, setShowCompleteSurveyModal] = useState(false);
+
+  // Survey context
+  const { surveyState, startSurvey, setProductRatings, setStaffRating, completeSurvey, closeSurvey } = useSurvey();
 
   // WebSocket message handler
   const handleWebSocketMessage = useCallback(async (message: any) => {
@@ -96,49 +101,30 @@ export const KioskOrdersPage: React.FC = () => {
         }
       }
     } else if (message.type === 'survey_enabled') {
-      console.log('Survey enabled via WebSocket:', message);
-      // When survey is enabled, show complete survey modal immediately
+      console.log('Survey enabled via WebSocket - starting survey immediately');
+      // When survey is enabled, start survey immediately using global context
       setShowWaitingForSurveyModal(false);
       
-      // Get assignment_id from message
       const assignmentId = message.assignment_id;
+      const staffName = patientInfo?.staff_name || 'Personal';
       
-      // Reload patient data to ensure we have the latest info
-      if (deviceId) {
-        try {
-          const patientData = await kioskApi.getActivePatient(deviceId);
-          setPatientInfo({
-            full_name: patientData.patient.full_name,
-            room_code: patientData.room.code,
-            staff_name: patientData.staff.full_name,
-            survey_enabled: true,
-            can_patient_order: patientData.can_patient_order !== false,
-            patient_assignment_id: patientData.id || assignmentId,
-          });
-          
-          // Show complete survey modal after updating patient info
-          setTimeout(() => {
-            setShowCompleteSurveyModal(true);
-          }, 100);
-        } catch (error) {
-          console.error('Error reloading patient data after survey enabled:', error);
-          // Fallback: use assignment_id from message if available
-          if (assignmentId) {
-            setPatientInfo(prev => prev ? {
-              ...prev,
-              survey_enabled: true,
-              patient_assignment_id: assignmentId
-            } : null);
-            setShowCompleteSurveyModal(true);
-          }
-        }
+      setPatientInfo(prev => prev ? {
+        ...prev,
+        survey_enabled: true,
+        can_patient_order: false,
+        patient_assignment_id: assignmentId || prev.patient_assignment_id
+      } : null);
+      
+      // Start survey immediately using global context (works from any page)
+      if (assignmentId || patientInfo?.patient_assignment_id) {
+        startSurvey(assignmentId || patientInfo?.patient_assignment_id!, staffName);
       }
     } else if (message.type === 'session_ended') {
       console.log('Patient session ended - closing modals and redirecting to home page');
       // When session ends (either by staff or after feedback), close all modals and redirect
       setShowWaitingForSurveyModal(false);
-      setShowCompleteSurveyModal(false);
       setShowThankYouModal(false);
+      closeSurvey(); // Close any open survey modals
       // Redirect to the home page (shows welcome screen)
       if (deviceId) {
         navigate(`/kiosk/${deviceId}`, { replace: true });
@@ -149,7 +135,7 @@ export const KioskOrdersPage: React.FC = () => {
       setPatientInfo(prev => prev ? { ...prev, can_patient_order: message.can_patient_order ?? true } : null);
       setShowWaitingForSurveyModal(false);
     }
-  }, [deviceId, navigate]);
+  }, [deviceId, navigate, patientInfo, startSurvey, closeSurvey]);
 
   // WebSocket connection for real-time order updates
   const wsUrl = deviceId ? `${WS_BASE_URL}/ws/kiosk/orders/?device_uid=${deviceId}` : '';
@@ -170,7 +156,7 @@ export const KioskOrdersPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [deviceId]);
+  }, [deviceId, startSurvey]);
 
   // Block back navigation when waiting for survey
   useEffect(() => {
@@ -240,15 +226,14 @@ export const KioskOrdersPage: React.FC = () => {
             setShowWaitingForSurveyModal(true);
           }
           
-          // Check if survey is enabled - show complete survey modal immediately
-          // Only show if survey is enabled and patient assignment is still active
-          // (If feedback was already submitted, backend will end the session)
-          if (patientData.survey_enabled) {
+          // Check if survey is enabled - start survey immediately using global context
+          if (patientData.survey_enabled && patientData.id) {
             // Check if there are delivered orders to rate
             const deliveredOrders = (ordersResponse.orders || []).filter((order: Order) => order.status === 'DELIVERED');
             if (deliveredOrders.length > 0) {
               setShowWaitingForSurveyModal(false);
-              setShowCompleteSurveyModal(true);
+              // Start survey using global context
+              startSurvey(patientData.id, patientData.staff.full_name);
             }
           }
         } catch (error) {
@@ -491,15 +476,37 @@ export const KioskOrdersPage: React.FC = () => {
         />
       )}
 
-      {/* Complete Survey Modal */}
-      {showCompleteSurveyModal && patientInfo?.patient_assignment_id && deviceId && (
-        <CompleteSurveyModal
-          patientAssignmentId={patientInfo.patient_assignment_id}
-          deviceUid={deviceId}
-          onComplete={() => {
-            setShowCompleteSurveyModal(false);
-            setShowThankYouModal(true);
-            loadData();
+      {/* Survey Modals - Global Context */}
+      {surveyState.showProductRatings && surveyState.patientAssignmentId && (
+        <ProductRatingsModal
+          patientAssignmentId={surveyState.patientAssignmentId}
+          onNext={(ratings) => {
+            setProductRatings(ratings);
+          }}
+        />
+      )}
+
+      {surveyState.showStaffRating && surveyState.patientAssignmentId && (
+        <StaffRatingModal
+          staffName={surveyState.staffName}
+          onNext={(rating) => {
+            setStaffRating(rating);
+          }}
+        />
+      )}
+
+      {surveyState.showStayRating && surveyState.patientAssignmentId && (
+        <StayRatingModal
+          onComplete={async (stayRating, comment) => {
+            try {
+              await completeSurvey(stayRating, comment);
+              setShowThankYouModal(true);
+              loadData(); // Reload data to reflect session end
+            } catch (error: any) {
+              console.error('Error completing survey:', error);
+              const errorMessage = error.response?.data?.error || 'Error al enviar la encuesta. Por favor intenta de nuevo.';
+              alert(errorMessage);
+            }
           }}
         />
       )}
@@ -515,7 +522,11 @@ export const KioskOrdersPage: React.FC = () => {
       {/* Thank You Modal */}
       <ThankYouModal
         show={showThankYouModal}
-        onClose={() => setShowThankYouModal(false)}
+        onClose={() => {
+          setShowThankYouModal(false);
+          closeSurvey();
+          loadData(); // Reload data to reflect session end
+        }}
       />
     </div>
   );

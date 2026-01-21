@@ -13,8 +13,14 @@ import { OrderLimitsIndicator } from '../../components/kiosk/OrderLimitsIndicato
 import { LimitReachedModal } from '../../components/kiosk/LimitReachedModal';
 import { WelcomeModal } from '../../components/kiosk/WelcomeModal';
 import { InitialWelcomeScreen } from '../../components/kiosk/InitialWelcomeScreen';
+import CannotOrderModal from '../../components/kiosk/CannotOrderModal';
+import ProductRatingsModal from '../../components/kiosk/ProductRatingsModal';
+import StaffRatingModal from '../../components/kiosk/StaffRatingModal';
+import StayRatingModal from '../../components/kiosk/StayRatingModal';
+import { ThankYouModal } from '../../components/kiosk/ThankYouModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKioskState } from '../../hooks/useKioskState';
+import { useSurvey } from '../../contexts/SurveyContext';
 import { useWindowSize } from '../../utils/responsive';
 import { colors } from '../../styles/colors';
 import logoHorizontal from '../../assets/logos/logo-horizontal.png';
@@ -31,6 +37,7 @@ interface PatientInfo {
   };
   can_patient_order?: boolean;
   survey_enabled?: boolean;
+  patient_assignment_id?: number;
 }
 
 // Storage key for cart persistence
@@ -89,6 +96,11 @@ export const KioskHomePage: React.FC = () => {
   const [showInitialWelcome, setShowInitialWelcome] = useState(true);
   const [checkingPatient, setCheckingPatient] = useState(false);
   const [patientAssigned, setPatientAssigned] = useState(false);
+  const [showCannotOrderModal, setShowCannotOrderModal] = useState(false);
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
+
+  // Survey context
+  const { surveyState, startSurvey, setProductRatings, setStaffRating, completeSurvey, closeSurvey } = useSurvey();
 
   useEffect(() => {
     loadHomeData();
@@ -213,7 +225,13 @@ export const KioskHomePage: React.FC = () => {
             order_limits: patientData.order_limits || {},
             can_patient_order: patientData.can_patient_order !== false, // Default to true
             survey_enabled: patientData.survey_enabled || false,
+            patient_assignment_id: patientData.id,
           });
+
+          // If survey is enabled, start it immediately
+          if (patientData.survey_enabled && patientData.id) {
+            startSurvey(patientData.id, patientData.staff.full_name);
+          }
 
           // Hide initial welcome screen when patient is assigned
           setShowInitialWelcome(false);
@@ -332,12 +350,21 @@ export const KioskHomePage: React.FC = () => {
       loadHomeData();
       setPatientInfo(prev => prev ? { ...prev, can_patient_order: message.can_patient_order ?? true } : null);
     } else if (message.type === 'survey_enabled') {
-      console.log('Survey enabled - blocking patient orders');
-      // When survey is enabled, block patient orders and redirect to orders page to show survey
-      setPatientInfo(prev => prev ? { ...prev, can_patient_order: false, survey_enabled: true } : null);
-      // Redirect to orders page to show the survey modal
-      if (deviceId) {
-        navigate(`/kiosk/${deviceId}/orders`, { replace: true });
+      console.log('Survey enabled - starting survey immediately');
+      // When survey is enabled, block patient orders and start survey immediately
+      const assignmentId = message.assignment_id;
+      const staffName = patientInfo?.staff_name || 'Personal';
+      
+      setPatientInfo(prev => prev ? { 
+        ...prev, 
+        can_patient_order: false, 
+        survey_enabled: true,
+        patient_assignment_id: assignmentId || prev.patient_assignment_id
+      } : null);
+      
+      // Start survey immediately using global context (works from any page)
+      if (assignmentId || patientInfo?.patient_assignment_id) {
+        startSurvey(assignmentId || patientInfo?.patient_assignment_id!, staffName);
       }
     } else if (message.type === 'session_ended') {
       console.log('Patient session ended by staff - returning to welcome screen');
@@ -372,7 +399,7 @@ export const KioskHomePage: React.FC = () => {
   const handleAddToCart = (productId: number) => {
     // Check if patient can order
     if (patientInfo && patientInfo.can_patient_order === false) {
-      alert('No puedes realizar nuevas órdenes. Espera la confirmación de encuesta o que tu enfermera cree órdenes por ti.');
+      setShowCannotOrderModal(true);
       return;
     }
 
@@ -729,6 +756,57 @@ export const KioskHomePage: React.FC = () => {
           setHasSeenWelcome(true);
         }}
       />
+
+      {/* Cannot Order Modal */}
+      <CannotOrderModal
+        onClose={() => setShowCannotOrderModal(false)}
+      />
+
+      {/* Survey Modals - Global Context */}
+      {surveyState.showProductRatings && surveyState.patientAssignmentId && (
+        <ProductRatingsModal
+          patientAssignmentId={surveyState.patientAssignmentId}
+          onNext={(ratings) => {
+            setProductRatings(ratings);
+          }}
+        />
+      )}
+
+      {surveyState.showStaffRating && surveyState.patientAssignmentId && (
+        <StaffRatingModal
+          staffName={surveyState.staffName}
+          onNext={(rating) => {
+            setStaffRating(rating);
+          }}
+        />
+      )}
+
+      {surveyState.showStayRating && surveyState.patientAssignmentId && (
+        <StayRatingModal
+          onComplete={async (stayRating, comment) => {
+            try {
+              await completeSurvey(stayRating, comment);
+              setShowThankYouModal(true);
+            } catch (error: any) {
+              console.error('Error completing survey:', error);
+              const errorMessage = error.response?.data?.error || 'Error al enviar la encuesta. Por favor intenta de nuevo.';
+              alert(errorMessage);
+            }
+          }}
+        />
+      )}
+
+      {/* Thank You Modal */}
+      {showThankYouModal && (
+        <ThankYouModal
+          onClose={() => {
+            setShowThankYouModal(false);
+            closeSurvey();
+            // Reload data to reflect session end
+            loadHomeData();
+          }}
+        />
+      )}
     </div>
   );
 };

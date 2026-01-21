@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import { SurveyProvider } from './contexts/SurveyContext';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AdminProtectedRoute } from './auth/AdminProtectedRoute';
 
@@ -30,15 +31,16 @@ import InventoryPage from './pages/admin/InventoryPage';
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Kiosk Routes - New Design */}
-          <Route path="/kiosk/:deviceId" element={<KioskHomePage />} />
-          <Route path="/kiosk/:deviceId/category/:categoryId" element={<KioskCategoryPage />} />
-          <Route path="/kiosk/:deviceId/food" element={<KioskFoodPage />} />
-          <Route path="/kiosk/:deviceId/food/restaurant/:restaurantId" element={<KioskFoodPage />} />
-          <Route path="/kiosk/:deviceId/orders" element={<KioskOrdersPage />} />
-          <Route path="/kiosk" element={<Navigate to="/kiosk/01" replace />} />
+      <SurveyProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Kiosk Routes - New Design */}
+            <Route path="/kiosk/:deviceId" element={<KioskHomePage />} />
+            <Route path="/kiosk/:deviceId/category/:categoryId" element={<KioskCategoryPage />} />
+            <Route path="/kiosk/:deviceId/food" element={<KioskFoodPage />} />
+            <Route path="/kiosk/:deviceId/food/restaurant/:restaurantId" element={<KioskFoodPage />} />
+            <Route path="/kiosk/:deviceId/orders" element={<KioskOrdersPage />} />
+            <Route path="/kiosk" element={<Navigate to="/kiosk/01" replace />} />
 
           {/* Staff Routes */}
           <Route path="/staff/login" element={<LoginPage />} />
@@ -126,12 +128,13 @@ function App() {
             }
           />
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/kiosk" replace />} />
-          <Route path="/staff" element={<Navigate to="/staff/dashboard" replace />} />
-          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/kiosk" replace />} />
+            <Route path="/staff" element={<Navigate to="/staff/dashboard" replace />} />
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </SurveyProvider>
     </AuthProvider>
   );
 }
