@@ -2,6 +2,44 @@ from rest_framework import serializers
 from .models import Room, Patient, Device, PatientAssignment
 
 
+class PatientDetailSerializer(serializers.ModelSerializer):
+    """
+    Detailed serializer for Patient with related orders and feedbacks
+    """
+    total_orders = serializers.SerializerMethodField()
+    total_feedbacks = serializers.SerializerMethodField()
+    assignments_count = serializers.SerializerMethodField()
+    last_visit = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Patient
+        fields = [
+            'id', 'full_name', 'phone_e164', 'email', 'is_active',
+            'total_orders', 'total_feedbacks', 'assignments_count',
+            'last_visit', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_total_orders(self, obj):
+        """Get total orders count for this patient"""
+        return obj.orders.count()
+    
+    def get_total_feedbacks(self, obj):
+        """Get total feedbacks count for this patient"""
+        return obj.feedbacks.count()
+    
+    def get_assignments_count(self, obj):
+        """Get total assignments count"""
+        return obj.assignments.count()
+    
+    def get_last_visit(self, obj):
+        """Get last assignment date"""
+        last_assignment = obj.assignments.order_by('-started_at').first()
+        if last_assignment:
+            return last_assignment.started_at.isoformat()
+        return None
+
+
 class RoomSerializer(serializers.ModelSerializer):
     """
     Serializer for Room model

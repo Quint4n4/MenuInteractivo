@@ -12,6 +12,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, userEmail }) => {
   const menuItems = [
     { path: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
     { path: '/admin/users', icon: '👥', label: 'Usuarios' },
+    { path: '/admin/clients', icon: '👤', label: 'Clientes' },
     { path: '/admin/products', icon: '📦', label: 'Productos' },
     { path: '/admin/devices', icon: '📱', label: 'Dispositivos' },
     { path: '/staff/orders', icon: '📋', label: 'Órdenes' },

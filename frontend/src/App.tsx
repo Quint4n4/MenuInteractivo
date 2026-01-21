@@ -23,6 +23,7 @@ import { InventoryViewPage } from './pages/staff/InventoryViewPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import UsersManagementPage from './pages/admin/UsersManagementPage';
+import ClientsManagementPage from './pages/admin/ClientsManagementPage';
 import ProductsManagementPage from './pages/admin/ProductsManagementPage';
 import DevicesManagementPage from './pages/admin/DevicesManagementPage';
 import FeedbackPage from './pages/admin/FeedbackPage';
@@ -92,6 +93,14 @@ function App() {
             element={
               <AdminProtectedRoute>
                 <UsersManagementPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/clients"
+            element={
+              <AdminProtectedRoute>
+                <ClientsManagementPage />
               </AdminProtectedRoute>
             }
           />

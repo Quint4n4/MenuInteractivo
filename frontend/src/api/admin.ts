@@ -215,4 +215,35 @@ export const adminApi = {
     const response = await apiClient.get('/orders/dashboard/stats/');
     return response.data;
   },
+
+  // Patient/Client management
+  getPatients: async (params = {}) => {
+    const response = await apiClient.get('/clinic/patients/', { params });
+    return response.data;
+  },
+
+  getPatient: async (id: number) => {
+    const response = await apiClient.get(`/clinic/patients/${id}/`);
+    return response.data;
+  },
+
+  getPatientDetails: async (id: number) => {
+    const response = await apiClient.get(`/clinic/patients/${id}/full_details/`);
+    return response.data;
+  },
+
+  getPatientOrders: async (id: number) => {
+    const response = await apiClient.get(`/clinic/patients/${id}/orders/`);
+    return response.data;
+  },
+
+  getPatientFeedbacks: async (id: number) => {
+    const response = await apiClient.get(`/clinic/patients/${id}/feedbacks/`);
+    return response.data;
+  },
+
+  getPatientAssignments: async (id: number) => {
+    const response = await apiClient.get(`/clinic/patients/${id}/assignments/`);
+    return response.data;
+  },
 };

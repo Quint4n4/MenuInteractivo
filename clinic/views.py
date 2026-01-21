@@ -6,11 +6,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from accounts.permissions import IsStaffOrAdmin
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.db.models import Count, Avg
 
 from .models import Room, Patient, Device, PatientAssignment
 from .serializers import (
     RoomSerializer,
     PatientSerializer,
+    PatientDetailSerializer,
     DeviceSerializer,
     PatientAssignmentSerializer,
     PatientAssignmentCreateSerializer
@@ -56,9 +58,117 @@ class PatientViewSet(viewsets.ModelViewSet):
     permission_classes = [IsStaffOrAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_active']
-    search_fields = ['full_name', 'phone_e164']
+    search_fields = ['full_name', 'phone_e164', 'email']
     ordering_fields = ['full_name', 'created_at']
     ordering = ['-created_at']
+
+    def get_serializer_class(self):
+        """Use detailed serializer for list and retrieve"""
+        if self.action in ['list', 'retrieve']:
+            return PatientDetailSerializer
+        return PatientSerializer
+
+    @action(detail=True, methods=['get'])
+    def orders(self, request, pk=None):
+        """
+        Get all orders for a patient
+        GET /api/clinic/patients/{id}/orders/
+        """
+        from orders.serializers import OrderSerializer
+        
+        patient = self.get_object()
+        orders = patient.orders.all().prefetch_related('items', 'items__product').order_by('-placed_at')
+        
+        serializer = OrderSerializer(orders, many=True)
+        return Response({
+            'success': True,
+            'count': orders.count(),
+            'orders': serializer.data
+        })
+
+    @action(detail=True, methods=['get'])
+    def feedbacks(self, request, pk=None):
+        """
+        Get all feedbacks for a patient
+        GET /api/clinic/patients/{id}/feedbacks/
+        """
+        from feedbacks.serializers import FeedbackSerializer
+        
+        patient = self.get_object()
+        feedbacks = patient.feedbacks.all().select_related(
+            'patient_assignment', 'room', 'staff'
+        ).order_by('-created_at')
+        
+        serializer = FeedbackSerializer(feedbacks, many=True)
+        return Response({
+            'success': True,
+            'count': feedbacks.count(),
+            'feedbacks': serializer.data
+        })
+
+    @action(detail=True, methods=['get'])
+    def assignments(self, request, pk=None):
+        """
+        Get all assignments for a patient
+        GET /api/clinic/patients/{id}/assignments/
+        """
+        patient = self.get_object()
+        assignments = patient.assignments.all().select_related(
+            'staff', 'device', 'room'
+        ).order_by('-started_at')
+        
+        serializer = PatientAssignmentSerializer(assignments, many=True)
+        return Response({
+            'success': True,
+            'count': assignments.count(),
+            'assignments': serializer.data
+        })
+
+    @action(detail=True, methods=['get'])
+    def full_details(self, request, pk=None):
+        """
+        Get complete patient information including orders, feedbacks, and assignments
+        GET /api/clinic/patients/{id}/full_details/
+        """
+        from orders.serializers import OrderSerializer
+        from feedbacks.serializers import FeedbackSerializer
+        
+        patient = self.get_object()
+        
+        # Get orders
+        orders = patient.orders.all().prefetch_related('items', 'items__product').order_by('-placed_at')
+        
+        # Get feedbacks
+        feedbacks = patient.feedbacks.all().select_related(
+            'patient_assignment', 'room', 'staff'
+        ).order_by('-created_at')
+        
+        # Get assignments
+        assignments = patient.assignments.all().select_related(
+            'staff', 'device', 'room'
+        ).order_by('-started_at')
+        
+        # Calculate statistics
+        total_orders = orders.count()
+        total_feedbacks = feedbacks.count()
+        
+        # Average ratings from feedbacks
+        avg_staff_rating = feedbacks.aggregate(avg=Avg('staff_rating'))['avg'] or 0
+        avg_stay_rating = feedbacks.aggregate(avg=Avg('stay_rating'))['avg'] or 0
+        
+        return Response({
+            'patient': PatientDetailSerializer(patient).data,
+            'statistics': {
+                'total_orders': total_orders,
+                'total_feedbacks': total_feedbacks,
+                'total_assignments': assignments.count(),
+                'avg_staff_rating': round(avg_staff_rating, 2),
+                'avg_stay_rating': round(avg_stay_rating, 2),
+            },
+            'orders': OrderSerializer(orders[:10], many=True).data,  # Last 10 orders
+            'feedbacks': FeedbackSerializer(feedbacks[:10], many=True).data,  # Last 10 feedbacks
+            'assignments': PatientAssignmentSerializer(assignments[:10], many=True).data,  # Last 10 assignments
+        })
 
 
 class DeviceViewSet(viewsets.ModelViewSet):
