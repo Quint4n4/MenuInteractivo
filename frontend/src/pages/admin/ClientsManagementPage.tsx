@@ -375,7 +375,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   pageContainer: {
     display: 'flex',
     minHeight: '100vh',
-    backgroundColor: colors.background.primary,
+    backgroundColor: colors.ivory,
   },
   mainContent: {
     marginLeft: '250px',
@@ -403,12 +403,12 @@ const styles: { [key: string]: React.CSSProperties } = {
   title: {
     fontSize: '32px',
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: colors.textPrimary,
     marginBottom: '10px',
   },
   subtitle: {
     fontSize: '14px',
-    color: colors.text.secondary,
+    color: colors.textSecondary,
   },
   toolbar: {
     display: 'flex',
@@ -424,7 +424,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '100%',
     padding: '12px',
     fontSize: '14px',
-    border: `1px solid ${colors.border.light}`,
+    border: `1px solid ${colors.border}`,
     borderRadius: '8px',
     outline: 'none',
   },
@@ -435,7 +435,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   filterButton: {
     padding: '10px 20px',
     fontSize: '14px',
-    border: `1px solid ${colors.border.light}`,
+    border: `1px solid ${colors.border}`,
     borderRadius: '8px',
     backgroundColor: 'white',
     cursor: 'pointer',
@@ -457,27 +457,27 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderCollapse: 'collapse',
   },
   tableHeader: {
-    backgroundColor: colors.background.secondary,
+    backgroundColor: colors.cream,
   },
   th: {
     padding: '15px',
     textAlign: 'left',
     fontSize: '14px',
     fontWeight: '600',
-    color: colors.text.primary,
-    borderBottom: `2px solid ${colors.border.light}`,
+    color: colors.textPrimary,
+    borderBottom: `2px solid ${colors.border}`,
   },
   tableRow: {
-    borderBottom: `1px solid ${colors.border.light}`,
+    borderBottom: `1px solid ${colors.border}`,
     transition: 'background-color 0.2s',
   },
   td: {
     padding: '15px',
     fontSize: '14px',
-    color: colors.text.secondary,
+    color: colors.textSecondary,
   },
   badge: {
-    backgroundColor: colors.background.secondary,
+    backgroundColor: colors.cream,
     padding: '4px 12px',
     borderRadius: '12px',
     fontSize: '12px',
@@ -511,7 +511,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   emptyState: {
     padding: '40px',
     textAlign: 'center',
-    color: colors.text.secondary,
+    color: colors.textSecondary,
   },
   modalOverlay: {
     position: 'fixed',
@@ -539,19 +539,19 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 30px',
-    borderBottom: `1px solid ${colors.border.light}`,
+    borderBottom: `1px solid ${colors.border}`,
   },
   modalTitle: {
     fontSize: '24px',
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: colors.textPrimary,
   },
   closeButton: {
     background: 'none',
     border: 'none',
     fontSize: '24px',
     cursor: 'pointer',
-    color: colors.text.secondary,
+    color: colors.textSecondary,
   },
   modalBody: {
     padding: '30px',
@@ -563,14 +563,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginBottom: '30px',
   },
   statCard: {
-    backgroundColor: colors.background.secondary,
+    backgroundColor: colors.cream,
     padding: '20px',
     borderRadius: '8px',
     textAlign: 'center',
   },
   statLabel: {
     fontSize: '12px',
-    color: colors.text.secondary,
+    color: colors.textSecondary,
     marginBottom: '8px',
   },
   statValue: {
@@ -584,7 +584,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   sectionTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: colors.text.primary,
+    color: colors.textPrimary,
     marginBottom: '15px',
   },
   listContainer: {
@@ -594,12 +594,12 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   listItem: {
     padding: '15px',
-    backgroundColor: colors.background.secondary,
+    backgroundColor: colors.cream,
     borderRadius: '8px',
   },
   emptyText: {
     fontSize: '14px',
-    color: colors.text.secondary,
+    color: colors.textSecondary,
     fontStyle: 'italic',
   },
 };

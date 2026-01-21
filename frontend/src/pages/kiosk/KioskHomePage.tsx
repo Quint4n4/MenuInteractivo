@@ -801,6 +801,7 @@ export const KioskHomePage: React.FC = () => {
       {/* Thank You Modal */}
       {showThankYouModal && (
         <ThankYouModal
+          show={showThankYouModal}
           onClose={() => {
             setShowThankYouModal(false);
             closeSurvey();
