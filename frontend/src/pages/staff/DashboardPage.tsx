@@ -68,6 +68,11 @@ const DashboardPage: React.FC = () => {
           removeNotification(message.order_id);
         }
         loadData();
+      } else if (message.type === 'patient_assignment_ended') {
+        console.log('✅ Patient assignment ended:', message.assignment_id);
+        // Reload data to reflect that staff is now free
+        // This happens when patient completes survey and session ends automatically
+        loadData();
       }
     },
     onOpen: () => {

@@ -119,6 +119,24 @@ class PublicFeedbackViewSet(viewsets.ViewSet):
                     # Log but don't fail the request
                     print(f'WebSocket broadcast failed: {ws_error}')
 
+                # Broadcast session ended to staff via WebSocket
+                try:
+                    from channels.layers import get_channel_layer
+                    from asgiref.sync import async_to_sync
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        'staff_orders',
+                        {
+                            'type': 'patient_assignment_ended',
+                            'assignment_id': patient_assignment.id,
+                            'staff_id': patient_assignment.staff.id if patient_assignment.staff else None,
+                            'ended_at': patient_assignment.ended_at.isoformat(),
+                        }
+                    )
+                except Exception as ws_error:
+                    # Log but don't fail the request
+                    print(f'WebSocket broadcast to staff failed: {ws_error}')
+
                 # Calculate and update product ratings averages
                 self._update_product_ratings(product_ratings)
 

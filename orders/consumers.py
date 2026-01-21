@@ -79,6 +79,31 @@ class StaffOrderConsumer(AsyncWebsocketConsumer):
             'device_uid': event.get('device_uid'),
         }))
 
+    async def order_updated(self, event):
+        """
+        Handle order_updated event from channel layer
+        Send order update notification to WebSocket
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'order_updated',
+            'order_id': event['order_id'],
+            'status': event.get('status'),
+            'from_status': event.get('from_status'),
+            'changed_at': event.get('changed_at'),
+        }))
+
+    async def patient_assignment_ended(self, event):
+        """
+        Handle patient_assignment_ended event from channel layer
+        Notifies staff that a patient assignment session has ended
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'patient_assignment_ended',
+            'assignment_id': event.get('assignment_id'),
+            'staff_id': event.get('staff_id'),
+            'ended_at': event.get('ended_at'),
+        }))
+
     @database_sync_to_async
     def get_user_from_token(self, token):
         """

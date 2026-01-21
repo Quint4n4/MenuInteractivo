@@ -338,6 +338,22 @@ class PatientAssignmentViewSet(viewsets.ModelViewSet):
             # Log but don't fail the request
             print(f'WebSocket broadcast failed: {ws_error}')
 
+        # Broadcast session ended to staff via WebSocket
+        try:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'staff_orders',
+                {
+                    'type': 'patient_assignment_ended',
+                    'assignment_id': assignment.id,
+                    'staff_id': assignment.staff.id if assignment.staff else None,
+                    'ended_at': assignment.ended_at.isoformat(),
+                }
+            )
+        except Exception as ws_error:
+            # Log but don't fail the request
+            print(f'WebSocket broadcast to staff failed: {ws_error}')
+
         serializer = self.get_serializer(assignment)
         return Response(serializer.data)
 
