@@ -31,12 +31,15 @@ export const KioskStoreProductDetail: React.FC = () => {
   const loadProduct = async () => {
     try {
       if (productId) {
-        const products = await productsApi.getPublicProducts();
+        const productsData = await productsApi.getPublicProducts();
+        // Ensure we always have an array
+        const products = Array.isArray(productsData) ? productsData : [];
         const found = products.find((p: { id: number }) => p.id === parseInt(productId));
         setProduct(found || null);
       }
     } catch (error) {
       console.error('Error loading product:', error);
+      setProduct(null);
     } finally {
       setLoading(false);
     }

@@ -31,9 +31,11 @@ export const KioskStoreCart: React.FC = () => {
   const loadProducts = async () => {
     try {
       const productsData = await productsApi.getPublicProducts();
-      setProducts(productsData);
+      // Ensure we always have an array
+      setProducts(Array.isArray(productsData) ? productsData : []);
     } catch (error) {
       console.error('Error loading products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }

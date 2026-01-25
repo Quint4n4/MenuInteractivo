@@ -51,8 +51,13 @@ export const KioskStorePage: React.FC = () => {
       
       // Load patient info
       if (deviceId) {
-        const patientData = await kioskApi.getActivePatient(deviceId);
-        setPatientInfo(patientData);
+        try {
+          const patientData = await kioskApi.getActivePatient(deviceId);
+          setPatientInfo(patientData);
+        } catch (error) {
+          console.error('Error loading patient info:', error);
+          // Continue even if patient info fails
+        }
       }
 
       // Load categories and products
@@ -61,10 +66,14 @@ export const KioskStorePage: React.FC = () => {
         productsApi.getPublicProducts()
       ]);
 
-      setCategories(categoriesData);
-      setProducts(productsData);
+      // Ensure we always have arrays, even if API returns unexpected format
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setProducts(Array.isArray(productsData) ? productsData : []);
     } catch (error) {
       console.error('Error loading store data:', error);
+      // Set empty arrays on error to prevent map errors
+      setCategories([]);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -87,9 +96,12 @@ export const KioskStorePage: React.FC = () => {
 
   const cartTotal = Array.from(cart.values()).reduce((sum, qty) => sum + qty, 0);
 
-  const filteredProducts = selectedCategory
-    ? products.filter(p => p.category === selectedCategory)
-    : products;
+  // Ensure products is always an array before filtering
+  const filteredProducts = Array.isArray(products)
+    ? (selectedCategory
+        ? products.filter(p => p.category === selectedCategory)
+        : products)
+    : [];
 
   if (loading) {
     return (
