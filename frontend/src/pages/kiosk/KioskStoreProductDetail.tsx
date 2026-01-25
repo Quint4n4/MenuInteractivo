@@ -31,8 +31,8 @@ export const KioskStoreProductDetail: React.FC = () => {
   const loadProduct = async () => {
     try {
       if (productId) {
-        const products = await productsApi.getProducts();
-        const found = products.find(p => p.id === parseInt(productId));
+        const products = await productsApi.getPublicProducts();
+        const found = products.find((p: { id: number }) => p.id === parseInt(productId));
         setProduct(found || null);
       }
     } catch (error) {
@@ -74,7 +74,7 @@ export const KioskStoreProductDetail: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
       <header style={{
         backgroundColor: colors.primary,
         padding: '1rem 2rem',

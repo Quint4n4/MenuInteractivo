@@ -30,7 +30,7 @@ export const KioskStoreCart: React.FC = () => {
 
   const loadProducts = async () => {
     try {
-      const productsData = await productsApi.getProducts();
+      const productsData = await productsApi.getPublicProducts();
       setProducts(productsData);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -60,7 +60,7 @@ export const KioskStoreCart: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
       <header style={{
         backgroundColor: colors.primary,
         padding: '1rem 2rem',

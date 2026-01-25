@@ -52,7 +52,7 @@ export const KioskServiceDetail: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
       <header style={{
         backgroundColor: colors.primary,
         padding: '1rem 2rem',

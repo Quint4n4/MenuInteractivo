@@ -15,7 +15,7 @@ export const KioskServiceBooking: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
       <header style={{
         backgroundColor: colors.primary,
         padding: '1rem 2rem',
@@ -86,7 +86,7 @@ export const KioskServiceBooking: React.FC = () => {
                 padding: '1rem 2rem',
                 backgroundColor: 'transparent',
                 border: `1px solid ${colors.border}`,
-                color: colors.text,
+                color: colors.textPrimary,
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontSize: '1rem'

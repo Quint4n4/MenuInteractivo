@@ -53,7 +53,7 @@ export const KioskServicesPage: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
       {/* Header */}
       <header style={{
         backgroundColor: colors.primary,
@@ -121,7 +121,7 @@ export const KioskServicesPage: React.FC = () => {
               <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
                 {service.icon}
               </div>
-              <h2 style={{ color: colors.text, marginBottom: '0.5rem' }}>
+              <h2 style={{ color: colors.textPrimary, marginBottom: '0.5rem' }}>
                 {service.name}
               </h2>
               <p style={{ color: colors.textSecondary, margin: 0 }}>

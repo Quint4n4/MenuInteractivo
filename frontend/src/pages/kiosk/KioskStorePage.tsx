@@ -57,8 +57,8 @@ export const KioskStorePage: React.FC = () => {
 
       // Load categories and products
       const [categoriesData, productsData] = await Promise.all([
-        productsApi.getCategories(),
-        productsApi.getProducts()
+        productsApi.getPublicCategories(),
+        productsApi.getPublicProducts()
       ]);
 
       setCategories(categoriesData);
@@ -70,20 +70,9 @@ export const KioskStorePage: React.FC = () => {
     }
   };
 
-  const handleAddToCart = (product: Product) => {
-    const currentQty = cart.get(product.id) || 0;
-    setCart(new Map(cart.set(product.id, currentQty + 1)));
-  };
-
-  const handleRemoveFromCart = (productId: number) => {
-    const newCart = new Map(cart);
-    const currentQty = newCart.get(productId) || 0;
-    if (currentQty > 1) {
-      newCart.set(productId, currentQty - 1);
-    } else {
-      newCart.delete(productId);
-    }
-    setCart(newCart);
+  const handleAddToCart = (productId: number) => {
+    const currentQty = cart.get(productId) || 0;
+    setCart(new Map(cart.set(productId, currentQty + 1)));
   };
 
   const handleUpdateCart = (productId: number, quantity: number) => {
@@ -111,7 +100,7 @@ export const KioskStorePage: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
       {/* Header */}
       <header style={{
         backgroundColor: colors.primary,
@@ -149,7 +138,7 @@ export const KioskStorePage: React.FC = () => {
               onClick={() => setShowCart(true)}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: colors.accent,
+                backgroundColor: colors.primary,
                 border: 'none',
                 color: 'white',
                 borderRadius: '8px',
@@ -175,7 +164,7 @@ export const KioskStorePage: React.FC = () => {
             style={{
               padding: '0.5rem 1rem',
               backgroundColor: selectedCategory === null ? colors.primary : 'transparent',
-              color: selectedCategory === null ? 'white' : colors.text,
+              color: selectedCategory === null ? 'white' : colors.textPrimary,
               border: `1px solid ${colors.border}`,
               borderRadius: '8px',
               cursor: 'pointer'
@@ -190,7 +179,7 @@ export const KioskStorePage: React.FC = () => {
               style={{
                 padding: '0.5rem 1rem',
                 backgroundColor: selectedCategory === cat.id ? colors.primary : 'transparent',
-                color: selectedCategory === cat.id ? 'white' : colors.text,
+                color: selectedCategory === cat.id ? 'white' : colors.textPrimary,
                 border: `1px solid ${colors.border}`,
                 borderRadius: '8px',
                 cursor: 'pointer'
@@ -218,10 +207,8 @@ export const KioskStorePage: React.FC = () => {
               <ProductCard
                 key={product.id}
                 product={product}
-                quantity={cart.get(product.id) || 0}
-                onAddToCart={() => handleAddToCart(product)}
-                onRemoveFromCart={() => handleRemoveFromCart(product.id)}
-                onUpdateQuantity={(qty) => handleUpdateCart(product.id, qty)}
+                onAddToCart={handleAddToCart}
+                variant="grid"
               />
             ))}
           </div>
