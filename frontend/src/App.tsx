@@ -18,6 +18,8 @@ import { KioskServicesPage } from './pages/kiosk/KioskServicesPage';
 import { KioskServiceDetail } from './pages/kiosk/KioskServiceDetail';
 import { KioskServiceBooking } from './pages/kiosk/KioskServiceBooking';
 import { RedirectToStore } from './pages/kiosk/RedirectToStore';
+import { RenovaHomePage } from './pages/kiosk/RenovaHomePage';
+import { RenovaAboutPage } from './pages/kiosk/RenovaAboutPage';
 
 // Staff Pages
 import LoginPage from './pages/staff/LoginPage';
@@ -41,6 +43,10 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Kiosk Routes - More specific routes first */}
+          
+          {/* Renova Clinic Routes */}
+          <Route path="/kiosk/:deviceId/renova/about" element={<RenovaAboutPage />} />
+          <Route path="/kiosk/:deviceId/renova/home" element={<RenovaHomePage />} />
           
           {/* Store Routes - Tienda Unificada (Productos y Servicios) */}
           <Route path="/kiosk/:deviceId/store/checkout" element={<KioskStoreCheckout />} />

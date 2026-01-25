@@ -5,8 +5,8 @@ import { useStoreCart } from '../../hooks/useStoreCart';
 import { UnifiedItemCard } from '../../components/store/UnifiedItemCard';
 import { ServiceReservationModal } from '../../components/services/ServiceReservationModal';
 import { CartSidebar } from '../../components/store/CartSidebar';
+import { RenovaHeader } from '../../components/store/RenovaHeader';
 import { colors } from '../../styles/colors';
-import logoHorizontal from '../../assets/logos/logo-horizontal.png';
 
 /** Prototipo: Tienda unificada de Renova Clinic con productos y servicios */
 export const KioskStorePage: React.FC = () => {
@@ -63,33 +63,7 @@ export const KioskStorePage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
-      {/* Header */}
-      <header style={styles.header}>
-        <div style={styles.headerLeft}>
-          <div style={styles.logoCircle}>
-            <span style={styles.logoR}>R</span>
-          </div>
-          <h1 style={styles.brandName}>Renova Clinic</h1>
-        </div>
-        <nav style={styles.nav}>
-          <a href="#" style={styles.navLink}>Inicio</a>
-          <a href="#" style={{ ...styles.navLink, ...styles.navLinkActive }}>Tienda</a>
-          <a href="#" style={styles.navLink}>Nosotros</a>
-          <a href="#" style={styles.navLink}>Contacto</a>
-        </nav>
-        <div style={styles.headerRight}>
-          <button
-            type="button"
-            style={styles.cartIconBtn}
-            onClick={() => setShowCart(true)}
-          >
-            🛒
-            {totalItems > 0 && (
-              <span style={styles.cartBadge}>{totalItems}</span>
-            )}
-          </button>
-        </div>
-      </header>
+      <RenovaHeader activePage="store" onCartClick={() => setShowCart(true)} />
 
       {/* Search and Filter Bar */}
       <div style={styles.searchBar}>
@@ -195,86 +169,6 @@ export const KioskStorePage: React.FC = () => {
 };
 
 const styles: Record<string, React.CSSProperties> = {
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1rem 2rem',
-    backgroundColor: colors.white,
-    borderBottom: `1px solid ${colors.border}`,
-  },
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
-  logoCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: '50%',
-    backgroundColor: colors.primary,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoR: {
-    color: colors.white,
-    fontSize: 20,
-    fontWeight: 700,
-  },
-  brandName: {
-    margin: 0,
-    fontSize: 20,
-    fontWeight: 600,
-    color: colors.textPrimary,
-    fontFamily: 'serif',
-  },
-  nav: {
-    display: 'flex',
-    gap: 24,
-  },
-  navLink: {
-    color: colors.textPrimary,
-    textDecoration: 'none',
-    fontSize: 15,
-    fontWeight: 500,
-    fontFamily: 'serif',
-  },
-  navLinkActive: {
-    fontWeight: 700,
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
-  cartIconBtn: {
-    position: 'relative',
-    width: 40,
-    height: 40,
-    border: 'none',
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    fontSize: 20,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 20,
-    height: 20,
-    borderRadius: '50%',
-    backgroundColor: colors.primary,
-    color: colors.white,
-    fontSize: 11,
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   searchBar: {
     display: 'flex',
     gap: 16,
