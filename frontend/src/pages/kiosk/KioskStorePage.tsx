@@ -1,11 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MOCK_PRODUCTS, MOCK_SERVICES, MOCK_CATEGORIES, type StoreItem } from '../../types/store';
+import { MOCK_PRODUCTS, MOCK_SERVICES, type StoreItem } from '../../types/store';
 import { useStoreCart } from '../../hooks/useStoreCart';
 import { UnifiedItemCard } from '../../components/store/UnifiedItemCard';
 import { ServiceReservationModal } from '../../components/services/ServiceReservationModal';
 import { CartSidebar } from '../../components/store/CartSidebar';
-import { PriceRangeSlider } from '../../components/store/PriceRangeSlider';
 import { colors } from '../../styles/colors';
 import logoHorizontal from '../../assets/logos/logo-horizontal.png';
 
@@ -15,9 +14,8 @@ export const KioskStorePage: React.FC = () => {
   const navigate = useNavigate();
   const { cart, add, addServiceWithReservation, update, totalItems } = useStoreCart();
 
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<'all' | 'product' | 'service'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1500]);
   const [showCart, setShowCart] = useState(false);
   const [reservationService, setReservationService] = useState<StoreItem | null>(null);
 
@@ -30,9 +28,9 @@ export const KioskStorePage: React.FC = () => {
   const filtered = useMemo(() => {
     let items = allItems;
 
-    // Filtro por categoría
-    if (selectedCategory !== 'all') {
-      items = items.filter((item) => item.categoryId === selectedCategory);
+    // Filtro por tipo (producto o servicio)
+    if (selectedType !== 'all') {
+      items = items.filter((item) => item.type === selectedType);
     }
 
     // Filtro por búsqueda
@@ -45,13 +43,8 @@ export const KioskStorePage: React.FC = () => {
       );
     }
 
-    // Filtro por precio
-    items = items.filter(
-      (item) => item.price >= priceRange[0] && item.price <= priceRange[1]
-    );
-
     return items;
-  }, [allItems, selectedCategory, searchQuery, priceRange]);
+  }, [allItems, selectedType, searchQuery]);
 
   const handleAddItem = (item: StoreItem) => {
     if (item.type === 'service') {
@@ -118,38 +111,38 @@ export const KioskStorePage: React.FC = () => {
         </select>
       </div>
 
-      {/* Category Filters */}
-      <div style={styles.categoryFilters}>
-        {MOCK_CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            type="button"
-            style={{
-              ...styles.categoryBtn,
-              ...(selectedCategory === cat.id ? styles.categoryBtnActive : {}),
-            }}
-            onClick={() => setSelectedCategory(cat.id)}
-          >
-            {cat.icon && <span style={styles.categoryIcon}>{cat.icon}</span>}
-            {cat.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Price Filter */}
-      <div style={styles.priceFilter}>
-        <label style={styles.priceLabel}>Precio:</label>
-        <div style={styles.priceSliderWrap}>
-          <PriceRangeSlider
-            min={0}
-            max={1500}
-            value={priceRange[1]}
-            onChange={(value) => setPriceRange([priceRange[0], value])}
-          />
-          <div style={styles.priceRangeText}>
-            ${priceRange[0]} - ${priceRange[1]}
-          </div>
-        </div>
+      {/* Type Filters - Productos y Servicios */}
+      <div style={styles.typeFilters}>
+        <button
+          type="button"
+          style={{
+            ...styles.typeBtn,
+            ...(selectedType === 'all' ? styles.typeBtnActive : {}),
+          }}
+          onClick={() => setSelectedType('all')}
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          style={{
+            ...styles.typeBtn,
+            ...(selectedType === 'product' ? styles.typeBtnActive : {}),
+          }}
+          onClick={() => setSelectedType('product')}
+        >
+          Productos
+        </button>
+        <button
+          type="button"
+          style={{
+            ...styles.typeBtn,
+            ...(selectedType === 'service' ? styles.typeBtnActive : {}),
+          }}
+          onClick={() => setSelectedType('service')}
+        >
+          Servicios
+        </button>
       </div>
 
       {/* Products Count */}
@@ -317,19 +310,15 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     minWidth: 150,
   },
-  categoryFilters: {
+  typeFilters: {
     display: 'flex',
     gap: 10,
     padding: '1rem 2rem',
     backgroundColor: colors.white,
     borderBottom: `1px solid ${colors.border}`,
-    flexWrap: 'wrap',
   },
-  categoryBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '10px 16px',
+  typeBtn: {
+    padding: '10px 20px',
     backgroundColor: colors.white,
     color: colors.textPrimary,
     border: `1px solid ${colors.border}`,
@@ -339,38 +328,10 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     transition: 'all 0.2s',
   },
-  categoryBtnActive: {
+  typeBtnActive: {
     backgroundColor: colors.primary,
     color: colors.white,
     borderColor: colors.primary,
-  },
-  categoryIcon: {
-    fontSize: 16,
-  },
-  priceFilter: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    padding: '1rem 2rem',
-    backgroundColor: colors.white,
-    borderBottom: `1px solid ${colors.border}`,
-  },
-  priceLabel: {
-    fontSize: 14,
-    fontWeight: 600,
-    color: colors.textPrimary,
-  },
-  priceSliderWrap: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
-  priceRangeText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    minWidth: 100,
-    textAlign: 'right',
   },
   productsCount: {
     padding: '1rem 2rem',

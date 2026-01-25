@@ -95,7 +95,8 @@ const styles: Record<string, React.CSSProperties> = {
   image: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    objectFit: 'contain',
+    backgroundColor: colors.white,
   },
   placeholder: {
     width: '100%',
