@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MOCK_PRODUCTS, MOCK_SERVICES, type StoreItem } from '../../types/store';
 import { useStoreCart } from '../../hooks/useStoreCart';
@@ -7,19 +7,80 @@ import { ServiceReservationModal } from '../../components/services/ServiceReserv
 import { CartSidebar } from '../../components/store/CartSidebar';
 import { RenovaHeader } from '../../components/store/RenovaHeader';
 import { AddToCartNotification } from '../../components/store/AddToCartNotification';
+import { kioskApi } from '../../api/kiosk';
+import { useSurvey } from '../../contexts/SurveyContext';
+import ProductRatingsModal from '../../components/kiosk/ProductRatingsModal';
+import StaffRatingModal from '../../components/kiosk/StaffRatingModal';
+import StayRatingModal from '../../components/kiosk/StayRatingModal';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import { colors } from '../../styles/colors';
+
+const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
 
 /** Prototipo: Tienda unificada de Clínica CAMSA con productos y servicios */
 export const KioskStorePage: React.FC = () => {
   const { deviceId } = useParams<{ deviceId: string }>();
   const navigate = useNavigate();
   const { cart, cartVersion, add, addServiceWithReservation, update, totalItems } = useStoreCart();
+  const { surveyState, startSurvey, setProductRatings, setStaffRating, completeSurvey } = useSurvey();
 
   const [selectedType, setSelectedType] = useState<'all' | 'product' | 'service'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [reservationService, setReservationService] = useState<StoreItem | null>(null);
   const [notificationItem, setNotificationItem] = useState<string | null>(null);
+  const [canPatientOrder, setCanPatientOrder] = useState<boolean>(true);
+
+  // Load patient info to check can_patient_order
+  useEffect(() => {
+    const loadPatientInfo = async () => {
+      if (deviceId) {
+        try {
+          const patientData = await kioskApi.getActivePatient(deviceId);
+          setCanPatientOrder(patientData.can_patient_order !== false);
+          
+          // Check if survey is enabled and start it immediately
+          if (patientData.survey_enabled && patientData.id) {
+            startSurvey(patientData.id, patientData.staff?.full_name || 'Personal');
+          }
+        } catch (error) {
+          console.error('Error loading patient info:', error);
+          setCanPatientOrder(true); // Default to true if error
+        }
+      }
+    };
+    loadPatientInfo();
+  }, [deviceId]);
+
+  // WebSocket to listen for survey_enabled and session_ended
+  const wsUrl = deviceId ? `${WS_BASE_URL}/ws/kiosk/orders/?device_uid=${deviceId}` : '';
+  
+  useWebSocket({
+    url: wsUrl,
+    onMessage: (message: any) => {
+      if (message.type === 'survey_enabled') {
+        console.log('Survey enabled via WebSocket - starting survey immediately');
+        const assignmentId = message.assignment_id;
+        // We need to get staff name from patient data
+        kioskApi.getActivePatient(deviceId!).then(patientData => {
+          if (assignmentId || patientData.id) {
+            startSurvey(assignmentId || patientData.id, patientData.staff?.full_name || 'Personal');
+          }
+        });
+      } else if (message.type === 'session_ended') {
+        console.log('Session ended - redirecting to home');
+        navigate(`/kiosk/${deviceId}`, { replace: true });
+      } else if (message.type === 'limits_updated') {
+        // Reload patient info to update can_patient_order
+        kioskApi.getActivePatient(deviceId!).then(patientData => {
+          setCanPatientOrder(patientData.can_patient_order !== false);
+        });
+      }
+    },
+    onOpen: () => console.log('✅ Store WebSocket connected'),
+    onClose: () => console.log('❌ Store WebSocket disconnected'),
+    onError: (error) => console.error('⚠️ Store WebSocket error:', error),
+  });
 
   // Combinar productos y servicios
   const allItems: StoreItem[] = useMemo(() => {
@@ -49,6 +110,12 @@ export const KioskStorePage: React.FC = () => {
   }, [allItems, selectedType, searchQuery]);
 
   const handleAddItem = (item: StoreItem) => {
+    // Check if patient can order
+    if (!canPatientOrder) {
+      alert('No puedes realizar pedidos en este momento. Por favor espera a que tu enfermera habilite la encuesta.');
+      return;
+    }
+
     if (item.type === 'service') {
       setReservationService(item);
     } else {
@@ -68,6 +135,16 @@ export const KioskStorePage: React.FC = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.ivory }}>
       <RenovaHeader activePage="store" onCartClick={() => setShowCart(true)} />
+      
+      {/* Back to Menu Button */}
+      <div style={styles.backButtonContainer}>
+        <button
+          onClick={() => navigate(`/kiosk/${deviceId}`)}
+          style={styles.backButton}
+        >
+          ← Volver al Menú
+        </button>
+      </div>
 
       {/* Search and Filter Bar */}
       <div style={styles.searchBar}>
@@ -176,6 +253,41 @@ export const KioskStorePage: React.FC = () => {
         isVisible={notificationItem !== null}
         onClose={() => setNotificationItem(null)}
       />
+
+      {/* Survey Modals - Global Context - Show from any page */}
+      {surveyState.showProductRatings && surveyState.patientAssignmentId && (
+        <ProductRatingsModal
+          patientAssignmentId={surveyState.patientAssignmentId}
+          onNext={(ratings) => {
+            setProductRatings(ratings);
+          }}
+        />
+      )}
+
+      {surveyState.showStaffRating && surveyState.patientAssignmentId && (
+        <StaffRatingModal
+          staffName={surveyState.staffName}
+          onNext={(rating) => {
+            setStaffRating(rating);
+          }}
+        />
+      )}
+
+      {surveyState.showStayRating && surveyState.patientAssignmentId && (
+        <StayRatingModal
+          onComplete={async (stayRating, comment) => {
+            try {
+              await completeSurvey(stayRating, comment);
+              // After survey completion, session will end automatically via WebSocket
+              navigate(`/kiosk/${deviceId}`, { replace: true });
+            } catch (error: any) {
+              console.error('Error completing survey:', error);
+              const errorMessage = error.response?.data?.error || 'Error al enviar la encuesta. Por favor intenta de nuevo.';
+              alert(errorMessage);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -259,5 +371,21 @@ const styles: Record<string, React.CSSProperties> = {
     color: colors.textMuted,
     padding: 48,
     fontSize: 16,
+  },
+  backButtonContainer: {
+    padding: '1rem 2rem',
+    backgroundColor: colors.white,
+    borderBottom: `1px solid ${colors.border}`,
+  },
+  backButton: {
+    padding: '10px 20px',
+    backgroundColor: colors.white,
+    color: colors.primary,
+    border: `2px solid ${colors.primary}`,
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   },
 };

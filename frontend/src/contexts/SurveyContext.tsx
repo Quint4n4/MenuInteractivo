@@ -81,6 +81,8 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       });
       
       // Close survey after successful submission
+      // The backend will automatically end the session and send session_ended via WebSocket
+      // Each page will handle the session_ended message to redirect to home/initial screen
       setSurveyState({
         showProductRatings: false,
         showStaffRating: false,

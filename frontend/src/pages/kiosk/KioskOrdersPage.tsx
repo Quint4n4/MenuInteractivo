@@ -69,13 +69,23 @@ export const KioskOrdersPage: React.FC = () => {
       console.log('Order status changed:', message);
 
       // If order was marked as delivered, show waiting for survey modal
+      // Only if patient cannot order (waiting for survey)
       if (message.status === 'DELIVERED') {
-        // Check if there are any delivered orders
-        const hasDeliveredOrders = activeOrders.some(order => order.status === 'DELIVERED');
-        if (hasDeliveredOrders || message.status === 'DELIVERED') {
-          setShowWaitingForSurveyModal(true);
-          // Update can_patient_order to false
-          setPatientInfo(prev => prev ? { ...prev, can_patient_order: false } : null);
+        // Reload orders to get updated status
+        if (deviceId) {
+          try {
+            const ordersResponse = await ordersApi.getActiveOrdersPublic(deviceId);
+            const updatedOrders = ordersResponse.orders || [];
+            setActiveOrders(updatedOrders);
+            
+            // Check if there are delivered orders and patient cannot order
+            const hasDeliveredOrders = updatedOrders.some((order: Order) => order.status === 'DELIVERED');
+            if (hasDeliveredOrders && patientInfo && !patientInfo.can_patient_order && !patientInfo.survey_enabled) {
+              setShowWaitingForSurveyModal(true);
+            }
+          } catch (error) {
+            console.error('Failed to reload orders:', error);
+          }
         }
       }
 
@@ -92,10 +102,21 @@ export const KioskOrdersPage: React.FC = () => {
       console.log('Order created by staff:', message);
 
       // Reload active orders to show the new order
+      // Patient can view orders created by staff even while waiting for survey
       if (deviceId) {
         try {
           const ordersResponse = await ordersApi.getActiveOrdersPublic(deviceId);
           setActiveOrders(ordersResponse.orders || []);
+          
+          // If patient is waiting for survey and can't order, keep the waiting modal visible
+          // Don't close it just because a new order was created by staff
+          if (patientInfo && !patientInfo.can_patient_order && !patientInfo.survey_enabled) {
+            // Check if there are delivered orders to show waiting modal
+            const deliveredOrders = (ordersResponse.orders || []).filter((order: Order) => order.status === 'DELIVERED');
+            if (deliveredOrders.length > 0) {
+              setShowWaitingForSurveyModal(true);
+            }
+          }
         } catch (error) {
           console.error('Failed to reload orders:', error);
         }
@@ -125,15 +146,20 @@ export const KioskOrdersPage: React.FC = () => {
       setShowWaitingForSurveyModal(false);
       setShowThankYouModal(false);
       closeSurvey(); // Close any open survey modals
-      // Redirect to the home page (shows welcome screen)
+      // Redirect to the home page (shows initial welcome screen)
       if (deviceId) {
         navigate(`/kiosk/${deviceId}`, { replace: true });
       }
     } else if (message.type === 'limits_updated') {
       console.log('Order limits updated:', message);
-      // When limits are updated, reactivate patient orders
-      setPatientInfo(prev => prev ? { ...prev, can_patient_order: message.can_patient_order ?? true } : null);
-      setShowWaitingForSurveyModal(false);
+      // When limits are updated, reactivate patient orders if can_patient_order is true
+      const canOrder = message.can_patient_order ?? true;
+      setPatientInfo(prev => prev ? { ...prev, can_patient_order: canOrder } : null);
+      
+      // Only close waiting modal if patient can now order again
+      if (canOrder) {
+        setShowWaitingForSurveyModal(false);
+      }
     }
   }, [deviceId, navigate, patientInfo, startSurvey, closeSurvey]);
 
@@ -222,7 +248,12 @@ export const KioskOrdersPage: React.FC = () => {
           // Check if there are delivered orders and survey is not enabled
           const ordersResponse = await ordersApi.getActiveOrdersPublic(deviceId);
           const deliveredOrders = (ordersResponse.orders || []).filter((order: Order) => order.status === 'DELIVERED');
-          if (deliveredOrders.length > 0 && !patientData.survey_enabled) {
+          
+          // Show waiting modal if:
+          // 1. There are delivered orders
+          // 2. Survey is not enabled yet
+          // 3. Patient cannot order (waiting for survey)
+          if (deliveredOrders.length > 0 && !patientData.survey_enabled && !patientData.can_patient_order) {
             setShowWaitingForSurveyModal(true);
           }
           
@@ -500,8 +531,15 @@ export const KioskOrdersPage: React.FC = () => {
           onComplete={async (stayRating, comment) => {
             try {
               await completeSurvey(stayRating, comment);
+              // Show thank you modal briefly, then redirect to home
               setShowThankYouModal(true);
-              loadData(); // Reload data to reflect session end
+              // After 2 seconds, redirect to home (session will be ended by backend)
+              setTimeout(() => {
+                setShowThankYouModal(false);
+                closeSurvey();
+                // Redirect to home page which will show initial welcome screen
+                navigate(`/kiosk/${deviceId}`, { replace: true });
+              }, 2000);
             } catch (error: any) {
               console.error('Error completing survey:', error);
               const errorMessage = error.response?.data?.error || 'Error al enviar la encuesta. Por favor intenta de nuevo.';

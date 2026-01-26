@@ -28,6 +28,7 @@ interface PatientInfo {
     DRINK?: number;
     SNACK?: number;
   };
+  can_patient_order?: boolean;
 }
 
 // Storage key for cart persistence
@@ -174,7 +175,7 @@ export const KioskHomePage: React.FC = () => {
     try {
       setLoading(true);
 
-      // ALWAYS check for active orders first - if any exist, redirect to orders page
+      // Check for active orders - but allow patient to stay on home if waiting for survey
       if (deviceId) {
         try {
           const ordersResponse = await ordersApi.getActiveOrdersPublic(deviceId);
@@ -185,11 +186,30 @@ export const KioskHomePage: React.FC = () => {
             ['PLACED', 'PREPARING', 'READY'].includes(order.status)
           );
 
+          // Only redirect to orders page if patient can still order
+          // If patient is waiting for survey (can_patient_order = false), they can view orders
+          // but we don't force redirect - they can navigate manually if they want
+          // This allows them to stay on home page if they prefer
           if (hasActiveOrders) {
-            // Patient has active orders, MUST redirect to orders page
-            console.log('Active orders found (PLACED/PREPARING/READY), redirecting to orders page');
-            navigate(`/kiosk/${deviceId}/orders`, { replace: true });
-            return; // Stop loading home data
+            // Check patient info first to see if they can order
+            try {
+              const patientData = await kioskApi.getActivePatient(deviceId);
+              // If patient can order, redirect to orders page
+              // If patient cannot order (waiting for survey), allow them to stay on home
+              if (patientData.can_patient_order !== false) {
+                console.log('Active orders found and patient can order, redirecting to orders page');
+                navigate(`/kiosk/${deviceId}/orders`, { replace: true });
+                return; // Stop loading home data
+              } else {
+                console.log('Active orders found but patient cannot order (waiting for survey), staying on home');
+                // Patient can view orders manually if they want, but we don't force redirect
+              }
+            } catch (patientError) {
+              // If we can't get patient data, default to redirecting for active orders
+              console.log('Active orders found, redirecting to orders page');
+              navigate(`/kiosk/${deviceId}/orders`, { replace: true });
+              return;
+            }
           }
         } catch (error) {
           console.error('Error checking active orders:', error);
@@ -207,6 +227,7 @@ export const KioskHomePage: React.FC = () => {
             room_code: patientData.room.code,
             staff_name: patientData.staff.full_name,
             order_limits: patientData.order_limits || {},
+            can_patient_order: patientData.can_patient_order !== false, // Default to true
           });
 
           // Hide initial welcome screen when patient is assigned
@@ -304,10 +325,15 @@ export const KioskHomePage: React.FC = () => {
     console.log('WebSocket message received in KioskHomePage:', message);
 
     if (message.type === 'order_created_by_staff') {
-      console.log('Order created by staff - redirecting to orders page');
-      // Redirect to orders page when staff creates an order
-      if (deviceId) {
+      console.log('Order created by staff');
+      // If patient can order, redirect to orders page
+      // If patient cannot order (waiting for survey), allow them to stay on current page
+      // They can navigate to orders manually to view the order
+      if (deviceId && patientInfo && patientInfo.can_patient_order !== false) {
         navigate(`/kiosk/${deviceId}/orders`, { replace: true });
+      } else {
+        console.log('Order created by staff but patient cannot order - staying on current page');
+        // Patient can view orders manually if they want
       }
     } else if (message.type === 'patient_assigned') {
       console.log('New patient assigned - updating state and reloading');
@@ -323,6 +349,10 @@ export const KioskHomePage: React.FC = () => {
     } else if (message.type === 'limits_updated') {
       console.log('Order limits updated by staff - reloading patient data');
       // When staff updates limits, reload patient data to get new limits
+      loadHomeData();
+    } else if (message.type === 'survey_enabled') {
+      console.log('Survey enabled via WebSocket - reloading patient data');
+      // When survey is enabled, reload patient data
       loadHomeData();
     } else if (message.type === 'session_ended') {
       console.log('Patient session ended by staff - returning to welcome screen');
@@ -355,6 +385,13 @@ export const KioskHomePage: React.FC = () => {
   });
 
   const handleAddToCart = (productId: number) => {
+    // Check if patient can order
+    if (patientInfo && patientInfo.can_patient_order === false) {
+      // Patient cannot order, show message
+      alert('No puedes realizar pedidos en este momento. Por favor espera a que tu enfermera habilite la encuesta.');
+      return;
+    }
+
     // Update activity timestamp
     updateActivity();
 
