@@ -239,8 +239,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: 24,
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    gap: 32,
   },
   empty: {
     textAlign: 'center',
