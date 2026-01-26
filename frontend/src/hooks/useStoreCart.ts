@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { StoreProduct, Service, StoreItem } from '../types/store';
 
 /** localStorage key solo para el prototipo de tienda. No usa kiosk_cart. */
@@ -36,6 +36,9 @@ export function useStoreCart() {
     return new Map();
   });
 
+  // Force re-render when cart changes by using a version counter
+  const [cartVersion, setCartVersion] = useState(0);
+
   useEffect(() => {
     if (cart.size > 0) {
       const serializable: Record<string, any> = {};
@@ -60,6 +63,7 @@ export function useStoreCart() {
       } else {
         next.set(itemId, { itemId, type, quantity: qty });
       }
+      setCartVersion((v) => v + 1);
       return next;
     });
   }, []);
@@ -80,6 +84,7 @@ export function useStoreCart() {
         reservationTime: timeSlot,
         reservationNotes: notes,
       });
+      setCartVersion((v) => v + 1);
       return next;
     });
   }, []);
@@ -94,6 +99,7 @@ export function useStoreCart() {
       } else {
         next.set(itemId, { ...existing, quantity: qty });
       }
+      setCartVersion((v) => v + 1);
       return next;
     });
   }, []);
@@ -102,15 +108,23 @@ export function useStoreCart() {
     setCart((prev) => {
       const next = new Map(prev);
       next.delete(itemId);
+      setCartVersion((v) => v + 1);
       return next;
     });
   }, []);
 
-  const clear = useCallback(() => setCart(new Map()), []);
+  const clear = useCallback(() => {
+    setCart(new Map());
+    setCartVersion((v) => v + 1);
+  }, []);
 
-  const totalItems = Array.from(cart.values()).reduce((s, item) => s + item.quantity, 0);
+  // Recalculate totalItems when cart or cartVersion changes
+  const totalItems = useMemo(() => {
+    return Array.from(cart.values()).reduce((s, item) => s + item.quantity, 0);
+  }, [cart, cartVersion]);
 
-  return { cart, add, addServiceWithReservation, update, remove, clear, totalItems };
+  // Include cartVersion in return to force re-renders in components that use cart
+  return { cart, cartVersion, add, addServiceWithReservation, update, remove, clear, totalItems };
 }
 
 export function getCartItems(

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { StoreProduct, Service } from '../../types/store';
 import { getCartItems, type CartItem } from '../../hooks/useStoreCart';
 import { CouponInput, type AppliedCoupon } from './CouponInput';
@@ -12,6 +12,7 @@ const formatPrice = (n: number) =>
 
 interface CartSidebarProps {
   cart: Map<number, CartItem>;
+  cartVersion?: number;
   products: StoreProduct[];
   services?: Service[];
   onClose: () => void;
@@ -21,6 +22,7 @@ interface CartSidebarProps {
 
 export const CartSidebar: React.FC<CartSidebarProps> = ({
   cart,
+  cartVersion = 0,
   products,
   services = [],
   onClose,
@@ -28,8 +30,15 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   onCheckout,
 }) => {
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
-  const items = getCartItems(cart, products, services);
-  const subtotal = items.reduce((s, { item, quantity }) => s + item.price * quantity, 0);
+  
+  // Recalculate items when cart or cartVersion changes
+  const items = useMemo(() => {
+    return getCartItems(cart, products, services);
+  }, [cart, cartVersion, products, services]);
+  
+  const subtotal = useMemo(() => {
+    return items.reduce((s, { item, quantity }) => s + item.price * quantity, 0);
+  }, [items]);
 
   const handleCheckout = () => {
     if (appliedCoupon) {

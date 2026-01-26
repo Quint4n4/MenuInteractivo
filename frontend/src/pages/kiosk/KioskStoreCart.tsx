@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MOCK_PRODUCTS, MOCK_SERVICES } from '../../types/store';
 import { useStoreCart, getCartItems } from '../../hooks/useStoreCart';
@@ -18,16 +18,22 @@ const formatPrice = (n: number) =>
 export const KioskStoreCart: React.FC = () => {
   const { deviceId } = useParams<{ deviceId: string }>();
   const navigate = useNavigate();
-  const { cart, update } = useStoreCart();
+  const { cart, cartVersion, update } = useStoreCart();
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(() =>
     getStoredCoupon()
   );
 
-  const items = getCartItems(cart, MOCK_PRODUCTS, MOCK_SERVICES);
-  const subtotal = items.reduce(
-    (s, { item, quantity }) => s + item.price * quantity,
-    0
-  );
+  // Recalculate items when cart or cartVersion changes
+  const items = useMemo(() => {
+    return getCartItems(cart, MOCK_PRODUCTS, MOCK_SERVICES);
+  }, [cart, cartVersion]);
+
+  const subtotal = useMemo(() => {
+    return items.reduce(
+      (s, { item, quantity }) => s + item.price * quantity,
+      0
+    );
+  }, [items]);
 
   const handleCheckout = () => {
     if (coupon) {

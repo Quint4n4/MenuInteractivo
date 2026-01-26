@@ -12,7 +12,7 @@ import { colors } from '../../styles/colors';
 export const KioskStorePage: React.FC = () => {
   const { deviceId } = useParams<{ deviceId: string }>();
   const navigate = useNavigate();
-  const { cart, add, addServiceWithReservation, update, totalItems } = useStoreCart();
+  const { cart, cartVersion, add, addServiceWithReservation, update, totalItems } = useStoreCart();
 
   const [selectedType, setSelectedType] = useState<'all' | 'product' | 'service'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,6 +145,7 @@ export const KioskStorePage: React.FC = () => {
       {showCart && (
         <CartSidebar
           cart={cart}
+          cartVersion={cartVersion}
           products={MOCK_PRODUCTS}
           services={MOCK_SERVICES}
           onClose={() => setShowCart(false)}
