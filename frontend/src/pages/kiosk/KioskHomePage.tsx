@@ -13,8 +13,10 @@ import { OrderLimitsIndicator } from '../../components/kiosk/OrderLimitsIndicato
 import { LimitReachedModal } from '../../components/kiosk/LimitReachedModal';
 import { WelcomeModal } from '../../components/kiosk/WelcomeModal';
 import { InitialWelcomeScreen } from '../../components/kiosk/InitialWelcomeScreen';
+import { CannotOrderModal } from '../../components/kiosk/CannotOrderModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKioskState } from '../../hooks/useKioskState';
+import { useSurvey } from '../../contexts/SurveyContext';
 import { colors } from '../../styles/colors';
 import logoHorizontal from '../../assets/logos/logo-horizontal.png';
 
@@ -86,6 +88,10 @@ export const KioskHomePage: React.FC = () => {
   const [showInitialWelcome, setShowInitialWelcome] = useState(true);
   const [checkingPatient, setCheckingPatient] = useState(false);
   const [patientAssigned, setPatientAssigned] = useState(false);
+  const [showCannotOrderModal, setShowCannotOrderModal] = useState(false);
+  
+  // Survey context
+  const { startSurvey } = useSurvey();
 
   useEffect(() => {
     loadHomeData();
@@ -351,9 +357,31 @@ export const KioskHomePage: React.FC = () => {
       // When staff updates limits, reload patient data to get new limits
       loadHomeData();
     } else if (message.type === 'survey_enabled') {
-      console.log('Survey enabled via WebSocket - reloading patient data');
-      // When survey is enabled, reload patient data
-      loadHomeData();
+      console.log('Survey enabled via WebSocket - starting survey immediately');
+      // When survey is enabled, start survey immediately using global context
+      const assignmentId = message.assignment_id;
+      // Get staff name from patient info or load it
+      const staffName = patientInfo?.staff_name || 'Personal';
+      
+      if (assignmentId) {
+        startSurvey(assignmentId, staffName);
+      } else {
+        // If no assignment_id, try to get it from patient data
+        if (deviceId) {
+          kioskApi.getActivePatient(deviceId).then(patientData => {
+            if (patientData.id) {
+              startSurvey(patientData.id, patientData.staff?.full_name || staffName);
+            }
+          });
+        }
+      }
+      
+      // Update patient info
+      setPatientInfo(prev => prev ? {
+        ...prev,
+        survey_enabled: true,
+        can_patient_order: false,
+      } : null);
     } else if (message.type === 'session_ended') {
       console.log('Patient session ended by staff - returning to welcome screen');
       // Reset all state to show initial welcome screen
@@ -387,8 +415,8 @@ export const KioskHomePage: React.FC = () => {
   const handleAddToCart = (productId: number) => {
     // Check if patient can order
     if (patientInfo && patientInfo.can_patient_order === false) {
-      // Patient cannot order, show message
-      alert('No puedes realizar pedidos en este momento. Por favor espera a que tu enfermera habilite la encuesta.');
+      // Patient cannot order, show modal
+      setShowCannotOrderModal(true);
       return;
     }
 
@@ -736,6 +764,12 @@ export const KioskHomePage: React.FC = () => {
           setShowWelcomeModal(false);
           setHasSeenWelcome(true);
         }}
+      />
+
+      {/* Cannot Order Modal */}
+      <CannotOrderModal
+        show={showCannotOrderModal}
+        onClose={() => setShowCannotOrderModal(false)}
       />
     </div>
   );

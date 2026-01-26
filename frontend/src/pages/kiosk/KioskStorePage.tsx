@@ -12,6 +12,7 @@ import { useSurvey } from '../../contexts/SurveyContext';
 import ProductRatingsModal from '../../components/kiosk/ProductRatingsModal';
 import StaffRatingModal from '../../components/kiosk/StaffRatingModal';
 import StayRatingModal from '../../components/kiosk/StayRatingModal';
+import { CannotOrderModal } from '../../components/kiosk/CannotOrderModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { colors } from '../../styles/colors';
 
@@ -30,6 +31,7 @@ export const KioskStorePage: React.FC = () => {
   const [reservationService, setReservationService] = useState<StoreItem | null>(null);
   const [notificationItem, setNotificationItem] = useState<string | null>(null);
   const [canPatientOrder, setCanPatientOrder] = useState<boolean>(true);
+  const [showCannotOrderModal, setShowCannotOrderModal] = useState(false);
 
   // Load patient info to check can_patient_order
   useEffect(() => {
@@ -61,10 +63,23 @@ export const KioskStorePage: React.FC = () => {
       if (message.type === 'survey_enabled') {
         console.log('Survey enabled via WebSocket - starting survey immediately');
         const assignmentId = message.assignment_id;
-        // We need to get staff name from patient data
+        
+        // Update can_patient_order to false
+        setCanPatientOrder(false);
+        
+        // Get staff name from patient data and start survey
         kioskApi.getActivePatient(deviceId!).then(patientData => {
-          if (assignmentId || patientData.id) {
-            startSurvey(assignmentId || patientData.id, patientData.staff?.full_name || 'Personal');
+          const finalAssignmentId = assignmentId || patientData.id;
+          const staffName = patientData.staff?.full_name || 'Personal';
+          
+          if (finalAssignmentId) {
+            startSurvey(finalAssignmentId, staffName);
+          }
+        }).catch(error => {
+          console.error('Error loading patient data for survey:', error);
+          // Try with assignment_id from message if available
+          if (assignmentId) {
+            startSurvey(assignmentId, 'Personal');
           }
         });
       } else if (message.type === 'session_ended') {
@@ -112,7 +127,7 @@ export const KioskStorePage: React.FC = () => {
   const handleAddItem = (item: StoreItem) => {
     // Check if patient can order
     if (!canPatientOrder) {
-      alert('No puedes realizar pedidos en este momento. Por favor espera a que tu enfermera habilite la encuesta.');
+      setShowCannotOrderModal(true);
       return;
     }
 
@@ -288,6 +303,12 @@ export const KioskStorePage: React.FC = () => {
           }}
         />
       )}
+
+      {/* Cannot Order Modal */}
+      <CannotOrderModal
+        show={showCannotOrderModal}
+        onClose={() => setShowCannotOrderModal(false)}
+      />
     </div>
   );
 };

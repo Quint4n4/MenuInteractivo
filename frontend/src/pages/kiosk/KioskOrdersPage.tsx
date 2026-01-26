@@ -129,6 +129,7 @@ export const KioskOrdersPage: React.FC = () => {
       const assignmentId = message.assignment_id;
       const staffName = patientInfo?.staff_name || 'Personal';
       
+      // Update patient info
       setPatientInfo(prev => prev ? {
         ...prev,
         survey_enabled: true,
@@ -137,8 +138,20 @@ export const KioskOrdersPage: React.FC = () => {
       } : null);
       
       // Start survey immediately using global context (works from any page)
-      if (assignmentId || patientInfo?.patient_assignment_id) {
-        startSurvey(assignmentId || patientInfo?.patient_assignment_id!, staffName);
+      // Use assignment_id from message, or from patient info, or reload patient data
+      if (assignmentId) {
+        startSurvey(assignmentId, staffName);
+      } else if (patientInfo?.patient_assignment_id) {
+        startSurvey(patientInfo.patient_assignment_id, staffName);
+      } else {
+        // Reload patient data to get assignment_id
+        if (deviceId) {
+          kioskApi.getActivePatient(deviceId).then(patientData => {
+            if (patientData.id) {
+              startSurvey(patientData.id, patientData.staff?.full_name || staffName);
+            }
+          });
+        }
       }
     } else if (message.type === 'session_ended') {
       console.log('Patient session ended - closing modals and redirecting to home page');
