@@ -152,7 +152,7 @@ export const MOCK_SERVICES: Service[] = [
     timeSlots: ['9:00', '10:00', '11:00', '14:00', '15:00', '16:00'],
     categoryId: 'facial',
     type: 'service',
-    image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=500&h=500&fit=crop&q=80&auto=format',
+    image: 'https://andressasantana.com/tratamientos-faciales-verano/',
   },
   {
     id: 2,
@@ -164,7 +164,7 @@ export const MOCK_SERVICES: Service[] = [
     timeSlots: ['9:00', '10:30', '12:00', '14:00', '15:30', '16:00'],
     categoryId: 'corporal',
     type: 'service',
-    image: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=500&h=500&fit=crop&q=80&auto=format',
+    image: 'https://www.clinicadrzuluaga.es/beneficios-mesoterapia-corporal/',
   },
   {
     id: 3,
@@ -176,7 +176,7 @@ export const MOCK_SERVICES: Service[] = [
     timeSlots: ['9:00', '10:00', '11:00', '14:00', '15:00'],
     categoryId: 'facial',
     type: 'service',
-    image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop&q=80&auto=format',
+    image: 'https://www.infobae.com/tendencias/lifestyle/2019/04/09/el-peeling-el-tratamiento-estrella-para-renovar-la-piel-durante-el-otono/',
   },
   {
     id: 4,
@@ -188,7 +188,7 @@ export const MOCK_SERVICES: Service[] = [
     timeSlots: ['9:00', '10:30', '12:00', '14:00', '15:30'],
     categoryId: 'facial',
     type: 'service',
-    image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=500&h=500&fit=crop&q=80&auto=format',
+    image: 'https://aurorareig.com/radiofrecuencia-facial/',
   },
   {
     id: 5,
@@ -200,18 +200,7 @@ export const MOCK_SERVICES: Service[] = [
     timeSlots: ['9:00', '11:00', '14:00', '16:00'],
     categoryId: 'corporal',
     type: 'service',
-    image: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=500&h=500&fit=crop&q=80&auto=format',
+    image: 'https://clinicadolor.cl/celulas-madre-medicina-regenerativa-para-aliviar-el-dolor-cronico/',
   },
-  {
-    id: 6,
-    name: 'Carboxiterapia Corporal',
-    price: 220.0,
-    description: 'Tratamiento con dióxido de carbono para mejorar circulación y reducir grasa localizada.',
-    duration: 30,
-    availableDays: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'],
-    timeSlots: ['9:00', '10:00', '11:00', '14:00', '15:00', '16:00'],
-    categoryId: 'corporal',
-    type: 'service',
-    image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=500&h=500&fit=crop&q=80&auto=format',
-  },
+
 ];
