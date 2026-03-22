@@ -67,7 +67,7 @@ const OrdersPage: React.FC = () => {
       // Admins see all orders, staff see only their assigned patient's orders
       const myOrdersFilter = !user?.is_superuser;
       const response = await ordersApi.getOrderQueue(filter, myOrdersFilter);
-      setOrders(response.orders);
+      setOrders(response.results || response.orders || []);
     } catch (err) {
       console.error('Failed to load orders:', err);
     } finally {
