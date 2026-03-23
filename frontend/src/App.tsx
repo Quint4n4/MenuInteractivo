@@ -23,6 +23,7 @@ const InventoryViewPage = lazy(() => import('./pages/staff/InventoryViewPage').t
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
 const UsersManagementPage = lazy(() => import('./pages/admin/UsersManagementPage'));
+const ClientsManagementPage = lazy(() => import('./pages/admin/ClientsManagementPage'));
 const ProductsManagementPage = lazy(() => import('./pages/admin/ProductsManagementPage'));
 const DevicesManagementPage = lazy(() => import('./pages/admin/DevicesManagementPage'));
 const FeedbackPage = lazy(() => import('./pages/admin/FeedbackPage'));
@@ -95,6 +96,14 @@ function App() {
             element={
               <AdminProtectedRoute>
                 <UsersManagementPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/clients"
+            element={
+              <AdminProtectedRoute>
+                <ClientsManagementPage />
               </AdminProtectedRoute>
             }
           />
