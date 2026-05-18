@@ -37,6 +37,14 @@ if allowed_hosts_str:
 else:
     ALLOWED_HOSTS = ['*'] if DEBUG else ['localhost']
 
+# Railway hace el healthcheck con Host: healthcheck.railway.app y enruta el
+# trafico interno por *.railway.app. Sin esto Django responde 400 al
+# healthcheck y Railway marca el deploy como fallido.
+if not DEBUG:
+    for _railway_host in ('healthcheck.railway.app', '.railway.app'):
+        if _railway_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_railway_host)
+
 # CSRF Trusted Origins
 if not DEBUG:
     CSRF_TRUSTED_ORIGINS = [
