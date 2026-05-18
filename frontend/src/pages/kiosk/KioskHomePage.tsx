@@ -176,32 +176,44 @@ export const KioskHomePage: React.FC = () => {
     return counts;
   }, [cart, activeOrdersItems, allProducts]);
 
+  // Ref para el sondeo de paciente: permite que el intervalo se detenga solo
+  // sin estar en las dependencias del efecto. Antes, tener `patientAssigned`
+  // en las deps recreaba el intervalo en cada poll/render (flood de peticiones
+  // que ademas presionaba la memoria de la pantalla LG).
+  const patientAssignedRef = useRef(false);
+
   // Check for patient assignment periodically when on initial welcome screen
   useEffect(() => {
-    if (!showInitialWelcome || patientAssigned) return;
+    if (!showInitialWelcome) return;
+
+    let stopped = false;
 
     const checkPatient = async () => {
+      if (stopped || patientAssignedRef.current || !deviceId) return;
       try {
-        if (deviceId) {
-          const patientData = await kioskApi.getActivePatient(deviceId);
-          if (patientData && patientData.patient) {
-            setPatientAssigned(true);
-          }
+        const patientData = await kioskApi.getActivePatient(deviceId);
+        if (patientData && patientData.patient) {
+          patientAssignedRef.current = true;
+          setPatientAssigned(true);
         }
       } catch (error) {
-        // No patient assigned yet
-        setPatientAssigned(false);
+        // 404 = aun no hay paciente asignado (estado normal mientras la
+        // enfermera registra). Seguimos sondeando: cuando el backend
+        // responda, el kiosko se recupera solo sin intervencion.
       }
     };
 
     // Check immediately
     checkPatient();
 
-    // Then check every 3 seconds
-    const interval = setInterval(checkPatient, 3000);
+    // Then check every 5 seconds (un solo intervalo, creado una sola vez)
+    const interval = setInterval(checkPatient, 5000);
 
-    return () => clearInterval(interval);
-  }, [deviceId, showInitialWelcome, patientAssigned]);
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
+  }, [deviceId, showInitialWelcome]);
 
   const loadHomeData = async () => {
     try {

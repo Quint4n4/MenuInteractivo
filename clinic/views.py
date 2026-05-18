@@ -1,5 +1,5 @@
 from rest_framework import viewsets, filters, status
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
@@ -487,6 +487,7 @@ class PatientAssignmentViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([])  # El kiosko sondea este endpoint 24/7: nunca debe ser limitado
 def get_active_patient_by_device(request, device_uid):
     """
     Get active patient assignment for a device (Public endpoint for Kiosk)

@@ -1,5 +1,5 @@
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, action, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,6 +13,7 @@ from .permissions import IsSuperAdmin
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([])  # El login nunca debe quedar bloqueado por el rate-limit anonimo
 def login_view(request):
     """
     POST /api/auth/login

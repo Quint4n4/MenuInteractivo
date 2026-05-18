@@ -4,6 +4,7 @@ Django settings for clinic_service project.
 
 from pathlib import Path
 import os
+import logging
 from dotenv import load_dotenv
 import dj_database_url
 
@@ -13,11 +14,21 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-this')
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+# SECURITY WARNING: keep the secret key used in production secret!
+_INSECURE_FALLBACK_SECRET = 'django-insecure-fallback-key-change-this'
+SECRET_KEY = os.getenv('SECRET_KEY', _INSECURE_FALLBACK_SECRET)
+
+# En producción la SECRET_KEY DEBE venir de una variable de entorno estable.
+# Si falta, fallamos de inmediato en lugar de firmar tokens JWT con una clave
+# pública conocida (cualquiera podría falsificar sesiones de administrador).
+if not DEBUG and SECRET_KEY == _INSECURE_FALLBACK_SECRET:
+    raise RuntimeError(
+        "SECRET_KEY no esta definida en produccion. Configura la variable de "
+        "entorno SECRET_KEY en Railway con una cadena aleatoria larga y estable."
+    )
 
 # ALLOWED_HOSTS - strip whitespace and handle empty values
 allowed_hosts_str = os.getenv('ALLOWED_HOSTS', '').strip()
@@ -31,6 +42,7 @@ if not DEBUG:
     CSRF_TRUSTED_ORIGINS = [
         origin.strip()
         for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+        if origin.strip()
     ]
 else:
     CSRF_TRUSTED_ORIGINS = [
@@ -109,10 +121,17 @@ ASGI_APPLICATION = 'clinic_service.asgi.application'
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL:
-    # Use DATABASE_URL if provided (recommended)
+    # Use DATABASE_URL if provided (recommended).
+    # conn_max_age + conn_health_checks reciclan conexiones muertas a Postgres
+    # (evita que una conexion rota deje el login caido hasta un reinicio manual).
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
+    DATABASES['default'].setdefault('OPTIONS', {})['connect_timeout'] = 10
 elif os.getenv('DATABASE_NAME'):
     # Alternative: Use individual database credentials
     DATABASES = {
@@ -273,7 +292,9 @@ SIMPLE_JWT = {
     'UPDATE_LAST_LOGIN': True,
 
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
+    # Clave de firma JWT independiente de SECRET_KEY: asi rotar SECRET_KEY no
+    # invalida todas las sesiones. Cae a SECRET_KEY si JWT_SIGNING_KEY no existe.
+    'SIGNING_KEY': os.getenv('JWT_SIGNING_KEY', SECRET_KEY),
     'VERIFYING_KEY': None,
     'AUDIENCE': None,
     'ISSUER': None,
@@ -362,10 +383,22 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
+# Filtro: silencia el flood de "Not Found: /api/public/kiosk/.../active-patient/"
+# (el 404 es la senal normal de "no hay paciente asignado", no un error real).
+class _SuppressActivePatient404(logging.Filter):
+    def filter(self, record):
+        return 'active-patient' not in record.getMessage()
+
+
 # Structured Logging Configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'suppress_active_patient_404': {
+            '()': 'clinic_service.settings._SuppressActivePatient404',
+        },
+    },
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
@@ -376,6 +409,7 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['suppress_active_patient_404'],
         },
     },
     'root': {

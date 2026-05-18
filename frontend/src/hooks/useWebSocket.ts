@@ -7,6 +7,8 @@ interface UseWebSocketOptions {
   onClose?: () => void;
   onError?: (error: Event) => void;
   reconnectInterval?: number;
+  // Conservado por compatibilidad con los callers. Ya NO se usa para rendirse:
+  // el kiosko reconecta indefinidamente con backoff.
   maxReconnectAttempts?: number;
 }
 
@@ -17,22 +19,46 @@ export const useWebSocket = ({
   onClose,
   onError,
   reconnectInterval = 3000,
-  maxReconnectAttempts = 5,
 }: UseWebSocketOptions) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [reconnectAttempt, setReconnectAttempt] = useState(0);
+
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const attemptRef = useRef(0);
+  const intentionalCloseRef = useRef(false);
+
+  // Callbacks guardados en refs: los callers pasan funciones inline que cambian
+  // de identidad en cada render. Sin esto, el socket se recreaba constantemente
+  // (tormenta de reconexiones que consume memoria y presiona la pantalla LG).
+  const onMessageRef = useRef(onMessage);
+  const onOpenRef = useRef(onOpen);
+  const onCloseRef = useRef(onClose);
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+    onOpenRef.current = onOpen;
+    onCloseRef.current = onClose;
+    onErrorRef.current = onError;
+  });
+
+  const scheduleReconnect = useCallback(() => {
+    if (intentionalCloseRef.current) return;
+    const attempt = attemptRef.current + 1;
+    attemptRef.current = attempt;
+    // Backoff exponencial con tope de 30s. Nunca se rinde.
+    const delay = Math.min(reconnectInterval * 2 ** (attempt - 1), 30000);
+    console.log(`Reconnecting in ${delay}ms (attempt ${attempt})`);
+    reconnectTimeoutRef.current = setTimeout(() => connectRef.current(), delay);
+  }, [reconnectInterval]);
+
+  const connectRef = useRef<() => void>(() => {});
 
   const connect = useCallback(() => {
     try {
-      // Clear any existing timeout
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
-
-      // Close existing connection if any
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
@@ -43,14 +69,14 @@ export const useWebSocket = ({
       ws.onopen = () => {
         console.log('WebSocket connected');
         setIsConnected(true);
-        setReconnectAttempt(0);
-        onOpen?.();
+        attemptRef.current = 0;
+        onOpenRef.current?.();
       };
 
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          onMessage?.(message);
+          onMessageRef.current?.(message);
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);
         }
@@ -60,48 +86,44 @@ export const useWebSocket = ({
         console.log('WebSocket disconnected');
         setIsConnected(false);
         wsRef.current = null;
-        onClose?.();
-
-        // Attempt to reconnect
-        setReconnectAttempt((currentAttempt) => {
-          if (currentAttempt < maxReconnectAttempts) {
-            reconnectTimeoutRef.current = setTimeout(() => {
-              console.log(`Reconnecting... (attempt ${currentAttempt + 1}/${maxReconnectAttempts})`);
-              connect();
-            }, reconnectInterval);
-            return currentAttempt + 1;
-          } else {
-            console.log('Max reconnection attempts reached. Stopping reconnection.');
-            return currentAttempt;
-          }
-        });
+        onCloseRef.current?.();
+        scheduleReconnect();
       };
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        onError?.(error);
+        onErrorRef.current?.(error);
       };
 
       wsRef.current = ws;
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
+      scheduleReconnect();
     }
-  }, [url, onMessage, onOpen, onClose, onError, maxReconnectAttempts, reconnectInterval]);
+  }, [url, scheduleReconnect]);
+
+  // connectRef siempre apunta al connect actual (lo usa el setTimeout del backoff).
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   useEffect(() => {
+    intentionalCloseRef.current = false;
+    attemptRef.current = 0;
     connect();
 
     return () => {
-      // Cleanup
+      intentionalCloseRef.current = true;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
       }
     };
-  }, [url]);
+  }, [connect]);
 
   const sendMessage = useCallback((message: any) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -112,6 +134,11 @@ export const useWebSocket = ({
   }, []);
 
   const disconnect = useCallback(() => {
+    intentionalCloseRef.current = true;
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.close();
     }

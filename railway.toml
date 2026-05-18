@@ -1,0 +1,17 @@
+[deploy]
+# El proceso de arranque SOLO levanta el servidor (sin migrar/collectstatic
+# bloqueando el arranque). Migraciones y estaticos corren en preDeploy.
+startCommand = "daphne -b 0.0.0.0 -p $PORT clinic_service.asgi:application"
+
+# preDeploy corre ANTES de mandar trafico a la nueva version. Si falla,
+# Railway aborta el deploy y mantiene viva la version anterior (mas seguro).
+preDeployCommand = "python manage.py migrate --noinput && python manage.py collectstatic --noinput"
+
+# Healthcheck: si el proceso se cuelga, Railway lo detecta y lo reinicia solo
+# (convierte el "redeploy manual" en recuperacion automatica).
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+
+# Reinicio automatico ante fallos.
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
