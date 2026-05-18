@@ -280,9 +280,15 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
+    # El kiosko (anonimo) y el panel de staff (autenticado) sondean varios
+    # endpoints cada pocos segundos, 24/7, y multiples dispositivos comparten
+    # la IP de la clinica. Con 100/hora el rate-limit rompia el kiosko (429 en
+    # ordenes, calificaciones, limites). Limites altos: backstop anti-abuso
+    # sin estorbar el uso legitimo continuo. (Login/health/active-patient
+    # ademas estan exentos via @throttle_classes([]).)
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour',
+        'anon': '100000/hour',
+        'user': '20000/hour',
     },
 }
 
