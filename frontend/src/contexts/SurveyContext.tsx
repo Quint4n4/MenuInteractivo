@@ -95,9 +95,19 @@ export const SurveyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
       const errorMessage = error.response?.data?.error || 'Error al enviar la encuesta. Por favor intenta de nuevo.';
-      
-      // If feedback was already submitted, close survey
-      if (error.response?.status === 400 && errorMessage.includes('already submitted')) {
+
+      // Si el envio ya se habia completado antes (envio duplicado / la sesion
+      // ya termino por end_care), el backend responde 400 "already submitted"
+      // / "not enabled" o 404 "not found or inactive". En TODOS esos casos la
+      // encuesta YA se guardo: cerrar con exito, sin mostrar error falso.
+      const status = error.response?.status;
+      const alreadyDone =
+        (status === 400 || status === 404) &&
+        (errorMessage.includes('already submitted') ||
+          errorMessage.includes('not enabled') ||
+          errorMessage.includes('not found or inactive'));
+
+      if (alreadyDone) {
         setSurveyState({
           showProductRatings: false,
           showStaffRating: false,

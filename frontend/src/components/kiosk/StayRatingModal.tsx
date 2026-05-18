@@ -4,20 +4,32 @@ import { colors } from '../../styles/colors';
 import { Building2 } from 'lucide-react';
 
 interface StayRatingModalProps {
-  onComplete: (rating: number, comment?: string) => void;
+  onComplete: (rating: number, comment?: string) => void | Promise<void>;
 }
 
 const StayRatingModal: React.FC<StayRatingModalProps> = ({ onComplete }) => {
   const { isMobile } = useWindowSize();
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Guarda contra doble-envio: en pantalla tactil (kiosko LG) el paciente
+    // puede tocar varias veces; cada toque generaba otro POST a /feedbacks/
+    // (el 1ro guardaba, los demas daban 400 y un error falso).
+    if (submitting) return;
     if (rating === 0) {
       alert('Por favor califica tu estancia (mínimo 1 estrella)');
       return;
     }
-    onComplete(rating, comment || undefined);
+    setSubmitting(true);
+    try {
+      await onComplete(rating, comment || undefined);
+      // Exito: la encuesta se cierra desde SurveyContext (este modal se desmonta).
+    } catch (e) {
+      // Falla real: reactivar el boton para permitir un reintento legitimo.
+      setSubmitting(false);
+    }
   };
 
   const StarRating: React.FC<{
@@ -80,18 +92,21 @@ const StayRatingModal: React.FC<StayRatingModalProps> = ({ onComplete }) => {
         </div>
         <button
           onClick={handleSubmit}
+          disabled={submitting}
           style={{
             ...styles.submitButton,
             ...(isMobile && responsiveStyles.submitButton),
+            opacity: submitting ? 0.6 : 1,
+            cursor: submitting ? 'not-allowed' : 'pointer',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = colors.mocha;
+            if (!submitting) e.currentTarget.style.backgroundColor = colors.mocha;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = colors.espresso;
+            if (!submitting) e.currentTarget.style.backgroundColor = colors.espresso;
           }}
         >
-          Enviar Encuesta
+          {submitting ? 'Enviando...' : 'Enviar Encuesta'}
         </button>
       </div>
     </div>
