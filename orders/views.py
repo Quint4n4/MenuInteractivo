@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 from django.db import transaction
 from django.utils import timezone
@@ -77,6 +78,33 @@ class PublicOrderViewSet(viewsets.ViewSet):
                         'survey_enabled': patient_assignment.survey_enabled,
                         'can_patient_order': False
                     }, status=status.HTTP_403_FORBIDDEN)
+
+                # Anti doble-envio (kiosko tactil): si ya existe una orden
+                # identica (mismos productos/cantidades) para esta asignacion
+                # creada hace muy poco, es un re-toque -> devolver esa orden
+                # como exito en vez de duplicar. Igual filosofia que el fix
+                # de doble-envio de la encuesta.
+                recent_cutoff = timezone.now() - timedelta(seconds=30)
+                requested_items = sorted(
+                    (item['product_id'], item['quantity']) for item in items_data
+                )
+                recent_orders = Order.objects.filter(
+                    patient_assignment=patient_assignment,
+                    status='PLACED',
+                    placed_at__gte=recent_cutoff,
+                ).prefetch_related('items')
+                for existing_order in recent_orders:
+                    existing_items = sorted(
+                        (oi.product_id, oi.quantity)
+                        for oi in existing_order.items.all()
+                    )
+                    if existing_items == requested_items:
+                        return Response({
+                            'success': True,
+                            'message': 'Orden duplicada ignorada',
+                            'order': PublicOrderSerializer(existing_order).data,
+                            'duplicate': True,
+                        }, status=status.HTTP_200_OK)
 
                 # Update device last_seen_at
                 device.last_seen_at = timezone.now()
