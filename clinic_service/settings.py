@@ -388,6 +388,10 @@ WS_ALLOWED_ORIGINS = [
 # Security Settings for Production
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
+    # Railway sondea el healthcheck por HTTP interno (sin X-Forwarded-Proto):
+    # con SECURE_SSL_REDIRECT eso devolveria 301 y Railway marca el deploy
+    # como fallido. Eximir /api/health para que responda 200 directo.
+    SECURE_REDIRECT_EXEMPT = [r'^api/health/?$']
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
