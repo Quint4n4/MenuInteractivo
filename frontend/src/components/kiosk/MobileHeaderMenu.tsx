@@ -145,10 +145,14 @@ const styles: { [key: string]: React.CSSProperties } = {
   panel: {
     position: 'fixed',
     top: '70px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: 'calc(100vw - 24px)',
+    // B6 fix: antes usaba left:50% + transform:translateX(-50%) para centrar,
+    // pero framer-motion sobrescribe el transform al animar -> el panel se
+    // corria a la derecha y el texto 'Desliza hacia arriba para cerrar' se
+    // cortaba. Posicionar con left/right + margin:auto evita el conflicto.
+    left: '12px',
+    right: '12px',
     maxWidth: '380px',
+    margin: '0 auto',
     maxHeight: 'calc(100vh - 120px)',
     overflowY: 'auto',
     backgroundColor: colors.white,

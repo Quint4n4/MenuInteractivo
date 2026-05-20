@@ -260,7 +260,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1000,
+    // B2 fix: el toast 'AddToCartNotification' usa zIndex 2000 y en mobile
+    // se posiciona en bottom: 16px -> tapaba el boton 'Confirmar Orden'
+    // del carrito. Subimos a 2100 para que el modal quede ENCIMA del toast.
+    zIndex: 2100,
   },
   modal: {
     backgroundColor: colors.white,

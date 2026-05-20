@@ -232,6 +232,11 @@ const sectionHeader: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
+  // B3 fix: en mobile, sin un 'gap' explicito el boton 'Ver todo' se montaba
+  // visualmente sobre el titulo (justify-content space-between no siempre
+  // basta cuando el contenedor padre constringe el ancho). Garantizamos
+  // separacion minima entre titulo y boton.
+  gap: '12px',
   borderBottom: '1px solid rgba(212, 175, 55, 0.12)',
 };
 
@@ -240,6 +245,10 @@ const headerLeft: React.CSSProperties = {
   alignItems: 'center',
   gap: '12px',
   minWidth: 0,
+  // Permite al lado izquierdo crecer/encogerse manteniendo al boton 'Ver todo'
+  // anclado a la derecha sin invadir el espacio del titulo.
+  flex: '1 1 auto',
+  overflow: 'hidden',
 };
 
 const iconBadge: React.CSSProperties = {
@@ -276,6 +285,8 @@ const viewAllBtn: React.CSSProperties = {
   cursor: 'pointer',
   fontFamily: 'inherit',
   whiteSpace: 'nowrap',
+  // B3 fix: el boton nunca se encoge ni se mueve al espacio del titulo.
+  flexShrink: 0,
 };
 
 const productGrid: React.CSSProperties = {

@@ -111,13 +111,14 @@ const ProductRatingsModal: React.FC<ProductRatingsModalProps> = ({
     const displayValue = hoverValue || value;
 
     return (
-      <div style={styles.starContainer}>
+      <div style={{ ...styles.starContainer, ...(isMobile && responsiveStyles.starContainer) }}>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             type="button"
             style={{
               ...styles.starButton,
+              ...(isMobile && responsiveStyles.starButton),
               color: star <= displayValue ? colors.latte : colors.grayLight,
               transform: star <= displayValue ? 'scale(1.08)' : 'scale(1)',
             }}
@@ -356,6 +357,14 @@ const responsiveStyles: { [key: string]: React.CSSProperties } = {
   nextButton: {
     padding: '14px 24px',
     fontSize: '16px',
+  },
+  // B1 fix: en mobile las 5 estrellas (42px c/u) se salian del card.
+  // Reducimos tamano + gap para que quepan sin desbordar.
+  starContainer: {
+    gap: '4px',
+  },
+  starButton: {
+    fontSize: '32px',
   },
 };
 
