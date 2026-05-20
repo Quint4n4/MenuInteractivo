@@ -192,6 +192,18 @@ export const KioskOrdersPage: React.FC = () => {
     onMessage: handleWebSocketMessage,
     onOpen: () => {
       console.log('✅ Kiosk Orders WebSocket connected');
+      // Reconciliacion tras (re)conexion: si se perdio un session_ended
+      // durante el desconectado del WS, re-consultar active-patient.
+      // Si 404 (la sesion ya cerro), cerrar modales y volver a home.
+      if (deviceId) {
+        kioskApi.getActivePatient(deviceId).catch(() => {
+          console.log('No active patient on WS reconnect — closing session and returning to home');
+          setShowWaitingForSurveyModal(false);
+          setShowThankYouModal(false);
+          closeSurvey();
+          navigate(`/kiosk/${deviceId}`, { replace: true });
+        });
+      }
     },
     onClose: () => {
       console.log('❌ Kiosk Orders WebSocket disconnected');

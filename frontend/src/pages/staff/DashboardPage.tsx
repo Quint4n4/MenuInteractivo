@@ -90,6 +90,11 @@ const DashboardPage: React.FC = () => {
     },
     onOpen: () => {
       console.log('✅ WebSocket connected to dashboard');
+      // Reconciliacion tras (re)conexion: si se perdio un
+      // patient_assignment_ended o session_ended_by_survey durante el
+      // desconectado del WS, recargar datos para reflejar el estado real
+      // del backend (asignaciones activas, etc.).
+      loadData();
     },
     onClose: () => {
       console.log('❌ WebSocket disconnected from dashboard');

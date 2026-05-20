@@ -437,6 +437,23 @@ export const KioskHomePage: React.FC = () => {
     onMessage: handleWebSocketMessage,
     onOpen: () => {
       console.log('✅ Kiosk Home WebSocket connected');
+      // Reconciliacion tras (re)conexion: si se perdio un session_ended
+      // durante el desconectado del WS, re-consultar active-patient.
+      // Si 404 (la sesion ya cerro en el backend), aplicar el mismo reset
+      // que el handler de session_ended para volver al welcome.
+      if (deviceId) {
+        kioskApi.getActivePatient(deviceId).catch(() => {
+          console.log('No active patient on WS reconnect — closing session');
+          resetState();
+          setPatientInfo(null);
+          setPatientId(null);
+          setPatientAssigned(false);
+          setShowInitialWelcome(true);
+          setShowWelcomeModal(false);
+          setCart(new Map());
+          setActiveOrdersItems(new Map());
+        });
+      }
     },
     onClose: () => {
       console.log('❌ Kiosk Home WebSocket disconnected');
