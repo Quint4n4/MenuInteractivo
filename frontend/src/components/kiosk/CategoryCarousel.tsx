@@ -88,6 +88,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
+            className="cat-view-all-btn"
             style={{
               ...viewAllBtn,
               padding: isMobile ? '6px 14px' : '8px 20px',
@@ -248,7 +249,6 @@ const headerLeft: React.CSSProperties = {
   // Permite al lado izquierdo crecer/encogerse manteniendo al boton 'Ver todo'
   // anclado a la derecha sin invadir el espacio del titulo.
   flex: '1 1 auto',
-  overflow: 'hidden',
 };
 
 const iconBadge: React.CSSProperties = {
@@ -404,3 +404,26 @@ const disabledBtn: React.CSSProperties = {
   cursor: 'not-allowed',
   fontFamily: 'inherit',
 };
+
+// B3 fix: anular la regla global de styles/responsive.css que en mobile
+// fuerza 'button { width: 100% !important; padding: 12px 16px !important }'.
+// Esa regla hacia que el boton 'Ver todo' se expandiera a todo el ancho del
+// card y tapara el titulo de la seccion. Restauramos ancho automatico y el
+// padding tipo pill chico que define viewAllBtn (6px 14px en mobile).
+if (typeof document !== 'undefined' && !document.head.querySelector('[data-category-carousel-styles]')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.setAttribute('data-category-carousel-styles', 'true');
+  styleSheet.textContent = `
+    .cat-view-all-btn {
+      width: auto !important;
+      padding: 8px 20px !important;
+    }
+    @media (max-width: 767px) {
+      .cat-view-all-btn {
+        width: auto !important;
+        padding: 6px 14px !important;
+      }
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}

@@ -96,98 +96,200 @@ export const InitialWelcomeScreen: React.FC<InitialWelcomeScreenProps> = ({
       </motion.div>
 
       {/* Orbit area: main video + product thumbnails */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.15 }}
-        style={{
-          position: 'relative',
-          width: orbitRadius * 2 + thumbSize,
-          height: orbitRadius * 2 + thumbSize,
-          flexShrink: 0,
-        }}
-      >
-        {/* Central video circle */}
-        <div
+      {isMobile ? (
+        /* B4 fix: el layout "flor" orbital (orbita ~585px) no cabe en pantalla
+           de telefono (~360px), los thumbs orbitales quedaban cortados a la
+           mitad y sin imagen. En mobile: video centrado + fila horizontal
+           scrolleable con los thumbs de producto. Mantiene la TV LG intacta. */
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
           style={{
-            ...videoCircle,
-            width: mainSize,
-            height: mainSize,
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
+            width: '100%',
+            maxWidth: '420px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+            flexShrink: 0,
           }}
         >
-          <AnimatePresence mode="wait">
-            {activeVideoUrl && !videoUnavailable ? (
-              <motion.div
-                key={activeVideoId}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                style={videoInner}
+          {/* Central video circle */}
+          <div
+            style={{
+              ...videoCircle,
+              width: 'min(72vw, 280px)',
+              height: 'min(72vw, 280px)',
+              position: 'relative',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {activeVideoUrl && !videoUnavailable ? (
+                <motion.div
+                  key={activeVideoId}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  style={videoInner}
+                >
+                  <iframe
+                    title="Productos CAMSA"
+                    src={activeVideoUrl}
+                    style={videoIframe}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    onError={() => setVideoUnavailable(true)}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="fallback"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  style={videoFallback}
+                >
+                  <PlayCircle size={48} color="#fff" strokeWidth={1.5} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          {/* Horizontal scrollable product thumbnails */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              overflowX: 'auto',
+              padding: '6px 14px 10px 14px',
+              WebkitOverflowScrolling: 'touch',
+              width: '100%',
+              boxSizing: 'border-box',
+              scrollSnapType: 'x mandatory',
+            }}
+          >
+            {KIOSK_PRODUCT_IMAGES.map((product, i) => (
+              <motion.a
+                key={product.label}
+                href={TIENDA_CAMSA_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 + i * 0.06 }}
+                style={{
+                  ...thumbCircle,
+                  width: '88px',
+                  height: '88px',
+                  flexShrink: 0,
+                  scrollSnapAlign: 'center',
+                }}
+                title={product.label}
               >
-                <iframe
-                  title="Productos CAMSA"
-                  src={activeVideoUrl}
-                  style={videoIframe}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  onError={() => setVideoUnavailable(true)}
+                <img
+                  src={getProductImageUrl(product.filename)}
+                  alt={product.label}
+                  style={thumbImg}
+                  draggable={false}
                 />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="fallback"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                style={videoFallback}
+              </motion.a>
+            ))}
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          style={{
+            position: 'relative',
+            width: orbitRadius * 2 + thumbSize,
+            height: orbitRadius * 2 + thumbSize,
+            flexShrink: 0,
+          }}
+        >
+          {/* Central video circle */}
+          <div
+            style={{
+              ...videoCircle,
+              width: mainSize,
+              height: mainSize,
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {activeVideoUrl && !videoUnavailable ? (
+                <motion.div
+                  key={activeVideoId}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  style={videoInner}
+                >
+                  <iframe
+                    title="Productos CAMSA"
+                    src={activeVideoUrl}
+                    style={videoIframe}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    onError={() => setVideoUnavailable(true)}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="fallback"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  style={videoFallback}
+                >
+                  <PlayCircle size={48} color="#fff" strokeWidth={1.5} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Orbiting product circles */}
+          {KIOSK_PRODUCT_IMAGES.map((product, i) => {
+            const angleDeg = productAngles[i];
+            const angleRad = (angleDeg * Math.PI) / 180;
+            const cx = orbitRadius * Math.cos(angleRad);
+            const cy = orbitRadius * Math.sin(angleRad);
+
+            return (
+              <motion.a
+                key={product.label}
+                href={TIENDA_CAMSA_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.45, delay: 0.3 + i * 0.08 }}
+                whileHover={{ scale: 1.12 }}
+                style={{
+                  ...thumbCircle,
+                  width: thumbSize,
+                  height: thumbSize,
+                  position: 'absolute',
+                  top: `calc(50% + ${cy}px - ${thumbSize / 2}px)`,
+                  left: `calc(50% + ${cx}px - ${thumbSize / 2}px)`,
+                }}
+                title={product.label}
               >
-                <PlayCircle size={48} color="#fff" strokeWidth={1.5} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Orbiting product circles */}
-        {KIOSK_PRODUCT_IMAGES.map((product, i) => {
-          const angleDeg = productAngles[i];
-          const angleRad = (angleDeg * Math.PI) / 180;
-          const cx = orbitRadius * Math.cos(angleRad);
-          const cy = orbitRadius * Math.sin(angleRad);
-
-          return (
-            <motion.a
-              key={product.label}
-              href={TIENDA_CAMSA_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.45, delay: 0.3 + i * 0.08 }}
-              whileHover={{ scale: 1.12 }}
-              style={{
-                ...thumbCircle,
-                width: thumbSize,
-                height: thumbSize,
-                position: 'absolute',
-                top: `calc(50% + ${cy}px - ${thumbSize / 2}px)`,
-                left: `calc(50% + ${cx}px - ${thumbSize / 2}px)`,
-              }}
-              title={product.label}
-            >
-              <img
-                src={getProductImageUrl(product.filename)}
-                alt={product.label}
-                style={thumbImg}
-                draggable={false}
-              />
-            </motion.a>
-          );
-        })}
-      </motion.div>
+                <img
+                  src={getProductImageUrl(product.filename)}
+                  alt={product.label}
+                  style={thumbImg}
+                  draggable={false}
+                />
+              </motion.a>
+            );
+          })}
+        </motion.div>
+      )}
 
       {/* Video dots */}
       {KIOSK_LANDING_VIDEO_IDS.length > 1 && (
