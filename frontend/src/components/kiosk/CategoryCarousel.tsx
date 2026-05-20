@@ -84,21 +84,8 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
             )}
           </div>
         </div>
-        {showViewAllButton && category.id > 0 && (
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            className="cat-view-all-btn"
-            style={{
-              ...viewAllBtn,
-              padding: isMobile ? '6px 14px' : '8px 20px',
-              fontSize: isMobile ? '12px' : '14px',
-            }}
-            onClick={() => onViewAll(category.id)}
-          >
-            Ver todo
-          </motion.button>
-        )}
+        {/* B3 fix: 'Ver todo' se movio al fondo del card (despues del
+            productGrid). El header del card solo lleva icono + titulo. */}
       </div>
 
       {/* Product Grid */}
@@ -216,6 +203,37 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
           );
         })}
       </div>
+
+      {/* B3 fix: 'Ver todo' como link al fondo del card, fuera del header.
+          Usamos <motion.a> (anchor) en vez de <button> porque la regla CSS
+          global 'button { width: 100% !important }' en mobile no aplica a
+          anchors, asi que el pill mantiene su ancho compacto. */}
+      {showViewAllButton && category.id > 0 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: isMobile ? '6px 16px 14px' : '4px 28px 20px',
+        }}>
+          <motion.a
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onViewAll(category.id);
+            }}
+            style={{
+              ...viewAllBtn,
+              padding: isMobile ? '6px 14px' : '8px 20px',
+              fontSize: isMobile ? '12px' : '14px',
+              textDecoration: 'none',
+              userSelect: 'none',
+            }}
+          >
+            Ver todo →
+          </motion.a>
+        </div>
+      )}
     </motion.section>
   );
 };
